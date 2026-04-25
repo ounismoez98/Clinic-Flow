@@ -9,17 +9,18 @@ import java.util.HashSet;
 import java.util.Set;
 
 @Entity
-public class Candidat {
-@Id
-@GeneratedValue
+public class Laboratoire {
+    @Id
+    @GeneratedValue
     private int id;
-    private String nom,prenom,email;
+    private String nom, prenom, email;
     @ElementCollection
     private Set<Integer> favoriteJobs = new HashSet<>();
-    public Candidat() {
+
+    public Laboratoire() {
     }
 
-    public Candidat(String nom, String prenom, String email) {
+    public Laboratoire(String nom, String prenom, String email) {
         this.nom = nom;
         this.prenom = prenom;
         this.email = email;
