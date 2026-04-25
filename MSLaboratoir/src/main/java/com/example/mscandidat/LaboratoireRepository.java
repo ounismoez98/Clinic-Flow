@@ -6,10 +6,8 @@ import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 
-public interface CandidatRepository extends JpaRepository<Candidat,Integer> {
+public interface LaboratoireRepository extends JpaRepository<Laboratoire, Integer> {
 
-    @Query("select c from Candidat c where c.nom like :name")
-    public Page<Candidat> candidatByNom(@Param("name") String n, Pageable pageable);
-
-
+    @Query("select l from Laboratoire l where l.nom like :name")
+    Page<Laboratoire> laboratoireByNom(@Param("name") String n, Pageable pageable);
 }
