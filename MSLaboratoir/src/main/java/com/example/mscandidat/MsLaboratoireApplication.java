@@ -24,10 +24,8 @@ public class MsLaboratoireApplication {
     ApplicationRunner init() {
         return (args) -> {
             if (laboratoireRepository.count() == 0) {
-                laboratoireRepository.save(new Laboratoire("Mariem", "Ch", "ma@esprit.tn"));
-                laboratoireRepository.save(new Laboratoire("Sarra", "ab", "sa@esprit.tn"));
-                laboratoireRepository.save(new Laboratoire("Mohamed", "ba", "mo@esprit.tn"));
-                laboratoireRepository.save(new Laboratoire("Maroua", "dh", "maroua@esprit.tn"));
+                laboratoireRepository.save(new Laboratoire("Lab Centrale", "Tunis", "20123456", "lab1@esprit.tn"));
+                laboratoireRepository.save(new Laboratoire("Lab Nord", "Ariana", "22123456", "lab2@esprit.tn"));
             }
             laboratoireRepository.findAll().forEach(System.out::println);
         };

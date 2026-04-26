@@ -1,28 +1,23 @@
 package com.example.mscandidat;
 
-import jakarta.persistence.ElementCollection;
 import jakarta.persistence.Entity;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.Id;
-
-import java.util.HashSet;
-import java.util.Set;
 
 @Entity
 public class Laboratoire {
     @Id
     @GeneratedValue
     private int id;
-    private String nom, prenom, email;
-    @ElementCollection
-    private Set<Integer> favoriteJobs = new HashSet<>();
+    private String nom, adresse, telephone, email;
 
     public Laboratoire() {
     }
 
-    public Laboratoire(String nom, String prenom, String email) {
+    public Laboratoire(String nom, String adresse, String telephone, String email) {
         this.nom = nom;
-        this.prenom = prenom;
+        this.adresse = adresse;
+        this.telephone = telephone;
         this.email = email;
     }
 
@@ -38,12 +33,20 @@ public class Laboratoire {
         this.nom = nom;
     }
 
-    public String getPrenom() {
-        return prenom;
+    public String getAdresse() {
+        return adresse;
     }
 
-    public void setPrenom(String prenom) {
-        this.prenom = prenom;
+    public void setAdresse(String adresse) {
+        this.adresse = adresse;
+    }
+
+    public String getTelephone() {
+        return telephone;
+    }
+
+    public void setTelephone(String telephone) {
+        this.telephone = telephone;
     }
 
     public String getEmail() {
@@ -54,11 +57,4 @@ public class Laboratoire {
         this.email = email;
     }
 
-    public Set<Integer> getFavoriteJobs() {
-        return favoriteJobs;
-    }
-
-    public void setFavoriteJobs(Set<Integer> favoriteJobs) {
-        this.favoriteJobs = favoriteJobs;
-    }
 }

@@ -18,6 +18,8 @@ public class OrdonnanceRestApi {
 
     @Autowired
     private IOrdonnanceService iOrdonnanceService;
+    @Autowired
+    private AnalysisMessageProducer analysisMessageProducer;
 
     @GetMapping
     public ResponseEntity<List<Ordonnance>> getAll() {
@@ -53,6 +55,12 @@ public class OrdonnanceRestApi {
             return ResponseEntity.status(HttpStatus.NOT_FOUND)
                     .body("Medicament not found with ID: " + medicamentId);
         }
+    }
+
+    @PostMapping("/analysis-requests")
+    public ResponseEntity<String> publishAnalysisRequest(@RequestBody AnalysisRequestMessage message) {
+        analysisMessageProducer.sendAnalysisRequest(message);
+        return ResponseEntity.ok("Analysis request sent.");
     }
 
     @Value("${welcome.message}")

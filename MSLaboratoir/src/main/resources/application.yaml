@@ -1,6 +1,11 @@
 spring:
   application:
     name: MSCandidat
+  rabbitmq:
+    host: localhost
+    port: 5672
+    username: guest
+    password: guest
   cloud:
     config:
       enabled: true
