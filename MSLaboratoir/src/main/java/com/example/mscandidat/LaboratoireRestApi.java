@@ -9,46 +9,47 @@ import org.springframework.web.bind.annotation.*;
 import java.util.List;
 
 @RestController
-@RequestMapping("/candidats")
-public class CandidatRestApi {
+@RequestMapping("/laboratoires")
+public class LaboratoireRestApi {
     @RequestMapping("/hello")
-    public String sayHello()
-    {return "Hello FROM MS Candidat";}
-    @Autowired
-    private ICandidatService iCandidatService;
-    @GetMapping
-    public ResponseEntity<List<Candidat>> getAll()
-    {
+    public String sayHello() {
+        return "Hello FROM MS Laboratoire";
+    }
 
-        List<Candidat> candidats = iCandidatService.getAll();
-        if (candidats.isEmpty()) {
+    @Autowired
+    private ILaboratoireService iLaboratoireService;
+
+    @GetMapping
+    public ResponseEntity<List<Laboratoire>> getAll() {
+        List<Laboratoire> laboratoires = iLaboratoireService.getAll();
+        if (laboratoires.isEmpty()) {
             return ResponseEntity.noContent().build();
         }
-        return ResponseEntity.ok(candidats);
+        return ResponseEntity.ok(laboratoires);
     }
-   @RequestMapping("/jobs")
-    public List<JobDTO> getAllJobs()
-    {return iCandidatService.getAllJobs();}
 
+    @RequestMapping("/jobs")
+    public List<JobDTO> getAllJobs() {
+        return iLaboratoireService.getAllJobs();
+    }
 
     @RequestMapping("jobs/{id}")
-    public JobDTO getJobById(@PathVariable  int id)
-    {return iCandidatService.getJobBYid(id);}
+    public JobDTO getJobById(@PathVariable int id) {
+        return iLaboratoireService.getJobBYid(id);
+    }
 
     @GetMapping("/{id}/favorite-jobs")
     public List<JobDTO> getFavoriteJobs(@PathVariable int id) {
-        return iCandidatService.getFavoriteJobs(id);
+        return iLaboratoireService.getFavoriteJobs(id);
     }
 
     @PostMapping("/{id}/favorite-jobs/{jobId}")
-    public ResponseEntity<String> saveFavoriteJob(@PathVariable int id, @PathVariable
-    int jobId) {
-        JobDTO job = iCandidatService.getJobBYid(id);
+    public ResponseEntity<String> saveFavoriteJob(@PathVariable int id, @PathVariable int jobId) {
+        JobDTO job = iLaboratoireService.getJobBYid(id);
         if (job != null) {
-            iCandidatService.saveFavoriteJob(id, jobId);
+            iLaboratoireService.saveFavoriteJob(id, jobId);
             return ResponseEntity.status(HttpStatus.OK).body("Job saved as favorite successfully.");
         } else {
-            // Gérer le cas où le job n'existe pas
             return ResponseEntity.status(HttpStatus.NOT_FOUND)
                     .body("Job not found with ID: " + jobId);
         }
@@ -58,9 +59,9 @@ public class CandidatRestApi {
     private String welcomeMessage;
     @Value("${server.port}")
     private String portserver;
+
     @GetMapping("/welcome")
     public String welcome() {
-        return welcomeMessage +" "+portserver;
+        return welcomeMessage + " " + portserver;
     }
-
 }

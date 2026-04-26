@@ -1,4 +1,4 @@
-package com.example.mscandidat;
+package com.example.msordonnance;
 
 import jakarta.persistence.ElementCollection;
 import jakarta.persistence.Entity;
@@ -9,17 +9,18 @@ import java.util.HashSet;
 import java.util.Set;
 
 @Entity
-public class Candidat {
-@Id
-@GeneratedValue
+public class Ordonnance {
+    @Id
+    @GeneratedValue
     private int id;
-    private String nom,prenom,email;
+    private String nom, prenom, email;
     @ElementCollection
-    private Set<Integer> favoriteJobs = new HashSet<>();
-    public Candidat() {
+    private Set<Integer> medicamentsIds = new HashSet<>();
+
+    public Ordonnance() {
     }
 
-    public Candidat(String nom, String prenom, String email) {
+    public Ordonnance(String nom, String prenom, String email) {
         this.nom = nom;
         this.prenom = prenom;
         this.email = email;
@@ -53,11 +54,11 @@ public class Candidat {
         this.email = email;
     }
 
-    public Set<Integer> getFavoriteJobs() {
-        return favoriteJobs;
+    public Set<Integer> getMedicamentsIds() {
+        return medicamentsIds;
     }
 
-    public void setFavoriteJobs(Set<Integer> favoriteJobs) {
-        this.favoriteJobs = favoriteJobs;
+    public void setMedicamentsIds(Set<Integer> medicamentsIds) {
+        this.medicamentsIds = medicamentsIds;
     }
 }
