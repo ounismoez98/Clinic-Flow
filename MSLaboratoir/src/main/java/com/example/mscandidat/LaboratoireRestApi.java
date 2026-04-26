@@ -5,6 +5,8 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
+// ...existing code...
+
 import java.util.List;
 
 @RestController
@@ -20,6 +22,9 @@ public class LaboratoireRestApi {
     @Autowired
     private AnalysisMessageProducer analysisMessageProducer;
 
+    @Autowired
+    private AnalysisCompletedProducer analysisCompletedProducer;
+
     @GetMapping
     public ResponseEntity<List<Laboratoire>> getAll() {
         List<Laboratoire> laboratoires = iLaboratoireService.getAll();
@@ -33,6 +38,12 @@ public class LaboratoireRestApi {
     public ResponseEntity<String> publishAnalysisRequest(@RequestBody AnalysisRequestMessage message) {
         analysisMessageProducer.sendAnalysisRequest(message);
         return ResponseEntity.ok("Analysis request sent.");
+    }
+
+    @PostMapping("/analysis-completed")
+    public ResponseEntity<String> publishAnalysisCompleted(@RequestBody AnalysisCompletedMessage message) {
+        analysisCompletedProducer.sendCompleted(message);
+        return ResponseEntity.ok("Analysis completed event sent.");
     }
 
     @Value("${welcome.message}")
