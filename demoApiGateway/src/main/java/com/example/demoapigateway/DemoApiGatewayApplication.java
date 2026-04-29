@@ -22,8 +22,8 @@ public class DemoApiGatewayApplication {
 	public RouteLocator gatewayroutes(RouteLocatorBuilder builder)
 	{
 		return  builder.routes()
-				.route("idroute1", r->r.path("/candidats/**")
-						.uri("lb://MSCandidat"))
+				.route("idroute1", r->r.path("/rendezvous/**")
+						.uri("lb://MSRendezVous"))
 				.route("idroute2", r->r.path("/jobs/**")
 						.uri("lb://MS-job-s"))
 				.build();
