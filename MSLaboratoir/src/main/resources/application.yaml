@@ -34,7 +34,6 @@ welcome:
 # spring.cloud.config.enabled=false
 # spring.cloud.config.import-check.enabled=false
 # config client
-# ou bien * pour l?accs  tous les endpoints actuator
 management:
   endpoints:
     web:
