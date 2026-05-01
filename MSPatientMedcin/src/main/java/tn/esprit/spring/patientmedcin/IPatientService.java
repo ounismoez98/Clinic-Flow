@@ -5,6 +5,8 @@ import java.util.List;
 public interface IPatientService {
     List<Patient> getAll();
 
+    PatientLinkedAccountResponse getPatientWithLinkedAccountFeign(int patientId);
+
     Patient create(Patient patient);
 
     Patient update(int id, Patient patient);

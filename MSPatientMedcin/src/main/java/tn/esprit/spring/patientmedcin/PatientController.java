@@ -49,6 +49,15 @@ public class PatientController {
         return ResponseEntity.ok(updated);
     }
 
+    @GetMapping("/{id}/with-linked-account")
+    public ResponseEntity<PatientLinkedAccountResponse> getWithLinkedAccount(@PathVariable int id) {
+        PatientLinkedAccountResponse body = patientService.getPatientWithLinkedAccountFeign(id);
+        if (body == null) {
+            return ResponseEntity.notFound().build();
+        }
+        return ResponseEntity.ok(body);
+    }
+
     @DeleteMapping("/{id}")
     public ResponseEntity<Void> delete(@PathVariable int id) {
         if (!patientService.delete(id)) {
