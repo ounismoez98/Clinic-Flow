@@ -1,6 +1,6 @@
 spring:
   application:
-    name: MSLaboratoir
+    name: MSOrdonnance
   cloud:
     config:
       enabled: true
