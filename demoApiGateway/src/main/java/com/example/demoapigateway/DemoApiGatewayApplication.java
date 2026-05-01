@@ -26,8 +26,10 @@ public class DemoApiGatewayApplication {
 						.uri("lb://MSCandidat"))
 				.route("idroute2", r->r.path("/jobs/**")
 						.uri("lb://MS-job-s"))
+				.route("users", r -> r.path("/users/**").uri("lb://MSUser"))
+				.route("patients", r -> r.path("/patients/**").uri("lb://MSPatientMedcin"))
+				.route("medecins", r -> r.path("/medecins/**").uri("lb://MSPatientMedcin"))
 				.build();
-
 	}
 
 }
