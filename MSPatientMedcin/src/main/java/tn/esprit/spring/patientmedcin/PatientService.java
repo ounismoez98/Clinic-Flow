@@ -8,6 +8,7 @@ import tn.esprit.spring.patientmedcin.client.UserDto;
 import tn.esprit.spring.patientmedcin.messaging.PatientUserLinkedPublisher;
 
 import java.util.List;
+import java.util.Optional;
 import java.util.stream.Collectors;
 
 @Service
@@ -33,6 +34,11 @@ public class PatientService implements IPatientService {
     public List<Patient> getAll() {
         return patientRepository.findAll();
     }
+
+	@Override
+	public Optional<Patient> getPatientById(int id) {
+		return patientRepository.findById(id);
+	}
 
 	@Override
 	@Transactional

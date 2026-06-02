@@ -1,9 +1,12 @@
 package tn.esprit.spring.patientmedcin;
 
 import java.util.List;
+import java.util.Optional;
 
 public interface IPatientService {
     List<Patient> getAll();
+
+    Optional<Patient> getPatientById(int id);
 
     PatientLinkedAccountResponse getPatientWithLinkedAccountFeign(int patientId);
 

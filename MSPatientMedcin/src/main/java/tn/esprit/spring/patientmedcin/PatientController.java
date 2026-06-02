@@ -34,6 +34,13 @@ public class PatientController {
         return ResponseEntity.ok(patients);
     }
 
+    @GetMapping("/{id}")
+    public ResponseEntity<Patient> getById(@PathVariable int id) {
+        return patientService.getPatientById(id)
+                .map(ResponseEntity::ok)
+                .orElse(ResponseEntity.notFound().build());
+    }
+
     @PostMapping
     public ResponseEntity<Patient> create(@RequestBody Patient patient) {
         Patient created = patientService.create(patient);
