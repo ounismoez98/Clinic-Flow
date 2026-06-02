@@ -1,0 +1,35 @@
+spring:
+  application:
+    name: MSPharmacie
+  cloud:
+    config:
+      enabled: false
+      import-check:
+        enabled: false
+    discovery:
+      enabled: false
+  datasource:
+    url: jdbc:h2:mem:mspharmacie_test;DATABASE_TO_UPPER=false;MODE=MySQL;DB_CLOSE_DELAY=-1
+    driver-class-name: org.h2.Driver
+    username: sa
+    password: ''
+  jpa:
+    database-platform: org.hibernate.dialect.H2Dialect
+    hibernate:
+      ddl-auto: create-drop
+    show-sql: false
+  rabbitmq:
+    listener:
+      simple:
+        auto-startup: false
+
+eureka:
+  client:
+    enabled: false
+
+gemini:
+  base-url: https://generativelanguage.googleapis.com
+  model: gemini-flash-latest
+  api-key: ''
+  connect-timeout-ms: 1000
+  read-timeout-ms: 2000

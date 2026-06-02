@@ -1,49 +1,13 @@
 spring:
   application:
-    name: MSCandidat
-  rabbitmq:
-    host: localhost
-    port: 5672
-    username: guest
-    password: guest
+    name: MSLaboratoir
   cloud:
     config:
       enabled: true
   config:
     import: "optional:configserver:http://localhost:8888"
-  h2:
-    console:
-      enabled: true
-      path: /h2
-  datasource:
-    username: Maroua
-    password: ""
-    # url: jdbc:h2:file:./Database/Data/Candidat
-    driver-class-name: org.h2.Driver
-  jpa:
-    hibernate:
-      ddl-auto: update
-    database-platform: org.hibernate.dialect.H2Dialect
-
-server:
-  port: 8081
-
-welcome:
-  message: "Hello MS Candidat From Candidat"
-
-# spring.cloud.config.enabled=false
-# spring.cloud.config.import-check.enabled=false
-# config client
-# ou bien * pour l?accs  tous les endpoints actuator
 management:
   endpoints:
     web:
       exposure:
         include: refresh
-
-# eureka
-eureka:
-  client:
-    register-with-eureka: true
-    service-url:
-      defaultZone: http://localhost:8761/eureka
