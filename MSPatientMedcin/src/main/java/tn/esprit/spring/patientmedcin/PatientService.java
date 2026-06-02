@@ -50,6 +50,23 @@ public class PatientService implements IPatientService {
 		}
 		return saved;
 	}
+    @Override
+    public Optional<Patient> getById(int id) {
+        return patientRepository.findById(id);
+    }
+
+    @Override
+    public List<Patient> searchByNomAndPrenom(String nom, String prenom) {
+        return patientRepository.findByNomIgnoreCaseAndPrenomIgnoreCase(
+                nom != null ? nom.trim() : "",
+                prenom != null ? prenom.trim() : "");
+    }
+
+    @Override
+    @Transactional
+    public Patient create(Patient patient) {
+        return patientRepository.save(patient);
+    }
 
 	@Override
 	@Transactional
