@@ -33,6 +33,7 @@ public class PatientMedcinApplication {
                 patientRepository.save(new Patient("Sarra", "Ab", "sa@patient.tn"));
                 patientRepository.save(new Patient("Mohamed", "Ba", "mo@patient.tn"));
                 patientRepository.save(new Patient("Maroua", "Dh", "maroua@patient.tn"));
+                patientRepository.save(new Patient("Mehdi", "Maamouri", "maroua@patient.tn"));
             }
         };
     }

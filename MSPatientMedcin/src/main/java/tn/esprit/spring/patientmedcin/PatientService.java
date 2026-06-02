@@ -4,6 +4,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
+import java.util.Optional;
 import java.util.stream.Collectors;
 
 @Service
@@ -20,6 +21,18 @@ public class PatientService implements IPatientService {
     @Override
     public List<Patient> getAll() {
         return patientRepository.findAll();
+    }
+
+    @Override
+    public Optional<Patient> getById(int id) {
+        return patientRepository.findById(id);
+    }
+
+    @Override
+    public List<Patient> searchByNomAndPrenom(String nom, String prenom) {
+        return patientRepository.findByNomIgnoreCaseAndPrenomIgnoreCase(
+                nom != null ? nom.trim() : "",
+                prenom != null ? prenom.trim() : "");
     }
 
     @Override

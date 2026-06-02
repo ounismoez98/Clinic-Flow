@@ -1,9 +1,14 @@
 package tn.esprit.spring.patientmedcin;
 
 import java.util.List;
+import java.util.Optional;
 
 public interface IPatientService {
     List<Patient> getAll();
+
+    Optional<Patient> getById(int id);
+
+    List<Patient> searchByNomAndPrenom(String nom, String prenom);
 
     Patient create(Patient patient);
 

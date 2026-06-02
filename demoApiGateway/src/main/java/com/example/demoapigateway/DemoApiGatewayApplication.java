@@ -22,10 +22,10 @@ public class DemoApiGatewayApplication {
 	public RouteLocator gatewayroutes(RouteLocatorBuilder builder)
 	{
 		return  builder.routes()
-				.route("idroute1", r->r.path("/candidats/**")
-						.uri("lb://MSCandidat"))
-				.route("idroute2", r->r.path("/jobs/**")
-						.uri("lb://MS-job-s"))
+				.route("idroute1", r->r.path("/factures/**")
+						.uri("lb://MsFacture"))
+				.route("idroute2", r->r.path("/patients/**")
+						.uri("lb://MSPatientMedcin"))
 				.build();
 
 	}
