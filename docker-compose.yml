@@ -8,3 +8,17 @@ services:
     environment:
       RABBITMQ_DEFAULT_USER: guest
       RABBITMQ_DEFAULT_PASS: guest
+
+  mysql:
+    image: mysql:8.0
+    container_name: clinicflow-mysql
+    ports:
+      - "3306:3306"
+    environment:
+      MYSQL_ROOT_PASSWORD: root
+      MYSQL_DATABASE: clinic_pharmacie
+    volumes:
+      - clinicflow_mysql_data:/var/lib/mysql
+
+volumes:
+  clinicflow_mysql_data:

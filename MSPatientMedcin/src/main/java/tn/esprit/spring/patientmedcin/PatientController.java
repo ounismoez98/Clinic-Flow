@@ -27,6 +27,13 @@ public class PatientController {
         return ResponseEntity.ok(patients);
     }
 
+    @GetMapping("/{id}")
+    public ResponseEntity<Patient> getById(@PathVariable int id) {
+        return patientService.getPatientById(id)
+                .map(ResponseEntity::ok)
+                .orElse(ResponseEntity.notFound().build());
+    }
+
     @PostMapping
     public ResponseEntity<Patient> create(@RequestBody Patient patient) {
         Patient created = patientService.create(patient);
@@ -40,6 +47,15 @@ public class PatientController {
             return ResponseEntity.notFound().build();
         }
         return ResponseEntity.ok(updated);
+    }
+
+    @GetMapping("/{id}/with-linked-account")
+    public ResponseEntity<PatientLinkedAccountResponse> getWithLinkedAccount(@PathVariable int id) {
+        PatientLinkedAccountResponse body = patientService.getPatientWithLinkedAccountFeign(id);
+        if (body == null) {
+            return ResponseEntity.notFound().build();
+        }
+        return ResponseEntity.ok(body);
     }
 
     @DeleteMapping("/{id}")

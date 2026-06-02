@@ -1,0 +1,10 @@
+tn\esprit\spring\user\UserApplication.class
+tn\esprit\spring\user\IUserService.class
+tn\esprit\spring\user\UserService.class
+tn\esprit\spring\user\messaging\PatientUserLinkedMessage.class
+tn\esprit\spring\user\messaging\PatientUserLinkedConsumer.class
+tn\esprit\spring\user\Role.class
+tn\esprit\spring\user\User.class
+tn\esprit\spring\user\messaging\RabbitMqClinicPatientConfig.class
+tn\esprit\spring\user\UserController.class
+tn\esprit\spring\user\UserRepository.class
