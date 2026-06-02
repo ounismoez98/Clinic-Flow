@@ -1,4 +1,6 @@
-﻿Database/
-MSUser/target/
+﻿**/Database/
+**/target/
 .idea/
 .env
+**/*.mv.db
+**/*.trace.db

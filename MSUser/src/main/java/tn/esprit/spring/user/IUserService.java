@@ -17,4 +17,6 @@ public interface IUserService {
     User update(int id, User user);
 
     boolean delete(int id);
+
+    void linkPatient(int userId, int patientId);
 }
