@@ -10,6 +10,10 @@ public interface IPatientService {
 
     PatientLinkedAccountResponse getPatientWithLinkedAccountFeign(int patientId);
 
+    Optional<Patient> getById(int id);
+
+    List<Patient> searchByNomAndPrenom(String nom, String prenom);
+
     Patient create(Patient patient);
 
     Patient update(int id, Patient patient);

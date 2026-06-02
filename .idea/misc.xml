@@ -6,7 +6,13 @@
     <option name="originalFiles">
       <list>
         <option value="$PROJECT_DIR$/MSUser/pom.xml" />
+        <option value="$PROJECT_DIR$/MsFacture/pom.xml" />
+        <option value="$PROJECT_DIR$/MSLaboratoir/pom.xml" />
+        <option value="$PROJECT_DIR$/MSOrdonnance/pom.xml" />
+        <option value="$PROJECT_DIR$/MSRendezVous/pom.xml" />
         <option value="$PROJECT_DIR$/demoApiGateway/pom.xml" />
+        <option value="$PROJECT_DIR$/MSNotification/pom.xml" />
+        <option value="$PROJECT_DIR$/MSPatientMedcin/pom.xml" />
         <option value="$PROJECT_DIR$/demoConfigServer/pom.xml" />
         <option value="$PROJECT_DIR$/demoEurekaServer/pom.xml" />
         <option value="$PROJECT_DIR$/MSLaboratoir/pom.xml" />
