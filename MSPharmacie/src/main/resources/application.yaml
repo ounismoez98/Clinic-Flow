@@ -1,0 +1,20 @@
+spring:
+  application:
+    name: MSPharmacie
+  cloud:
+    config:
+      enabled: true
+  config:
+    import: "optional:configserver:http://localhost:8888"
+management:
+  endpoints:
+    web:
+      exposure:
+        include: refresh
+
+gemini:
+  base-url: https://generativelanguage.googleapis.com
+  model: gemini-flash-latest
+  api-key: ${GEMINI_API_KEY:}
+  connect-timeout-ms: 8000
+  read-timeout-ms: 30000

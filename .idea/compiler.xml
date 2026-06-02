@@ -1,0 +1,36 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project version="4">
+  <component name="CompilerConfiguration">
+    <annotationProcessing>
+      <profile name="Maven default annotation processors profile" enabled="true">
+        <sourceOutputDir name="target/generated-sources/annotations" />
+        <sourceTestOutputDir name="target/generated-test-sources/test-annotations" />
+        <outputRelativeToContentRoot value="true" />
+        <module name="MSCandidat" />
+        <module name="MSOrdonnance" />
+        <module name="demoConfigServer" />
+        <module name="MsFacture" />
+        <module name="MSNotification" />
+        <module name="demoApiGateway" />
+        <module name="demoEurekaServer" />
+        <module name="MSPatientMedcin" />
+        <module name="MSUser" />
+        <module name="MSRendezVous" />
+      </profile>
+    </annotationProcessing>
+  </component>
+  <component name="JavacSettings">
+    <option name="ADDITIONAL_OPTIONS_OVERRIDE">
+      <module name="MSCandidat" options="-parameters" />
+      <module name="MSNotification" options="-parameters" />
+      <module name="MSOrdonnance" options="-parameters" />
+      <module name="MSPatientMedcin" options="-parameters" />
+      <module name="MSRendezVous" options="-parameters" />
+      <module name="MSUser" options="-parameters" />
+      <module name="MsFacture" options="-parameters" />
+      <module name="demoApiGateway" options="-parameters" />
+      <module name="demoConfigServer" options="-parameters" />
+      <module name="demoEurekaServer" options="-parameters" />
+    </option>
+  </component>
+</project>

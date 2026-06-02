@@ -2,14 +2,7 @@ package tn.esprit.spring.patientmedcin;
 
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.DeleteMapping;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.PathVariable;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.PutMapping;
-import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
 
@@ -34,6 +27,13 @@ public class PatientController {
         return ResponseEntity.ok(patients);
     }
 
+    @GetMapping("/{id}")
+    public ResponseEntity<Patient> getById(@PathVariable int id) {
+        return patientService.getPatientById(id)
+                .map(ResponseEntity::ok)
+                .orElse(ResponseEntity.notFound().build());
+    }
+
     @PostMapping
     public ResponseEntity<Patient> create(@RequestBody Patient patient) {
         Patient created = patientService.create(patient);
@@ -47,6 +47,15 @@ public class PatientController {
             return ResponseEntity.notFound().build();
         }
         return ResponseEntity.ok(updated);
+    }
+
+    @GetMapping("/{id}/with-linked-account")
+    public ResponseEntity<PatientLinkedAccountResponse> getWithLinkedAccount(@PathVariable int id) {
+        PatientLinkedAccountResponse body = patientService.getPatientWithLinkedAccountFeign(id);
+        if (body == null) {
+            return ResponseEntity.notFound().build();
+        }
+        return ResponseEntity.ok(body);
     }
 
     @DeleteMapping("/{id}")
@@ -72,5 +81,22 @@ public class PatientController {
         }
         patientService.saveFavoriteMedecin(id, medecinId);
         return ResponseEntity.ok("Medecin saved as favorite successfully.");
+    }
+    @GetMapping("/search")
+    public ResponseEntity<List<Patient>> search(
+            @RequestParam String nom,
+            @RequestParam String prenom) {
+        List<Patient> patients = patientService.searchByNomAndPrenom(nom, prenom);
+        if (patients.isEmpty()) {
+            return ResponseEntity.noContent().build();
+        }
+        return ResponseEntity.ok(patients);
+    }
+
+    @GetMapping("/{id}")
+    public ResponseEntity<Patient> getById(@PathVariable int id) {
+        return patientService.getById(id)
+                .map(ResponseEntity::ok)
+                .orElseGet(() -> ResponseEntity.notFound().build());
     }
 }
