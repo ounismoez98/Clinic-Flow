@@ -6,17 +6,9 @@
   <component name="ChangeListManager">
     <list default="true" id="ef4e5244-133e-46c2-8994-c6ee36e8d9bf" name="Changes" comment="">
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/MSLaboratoir/src/main/resources/application.yaml" beforeDir="false" afterPath="$PROJECT_DIR$/MSLaboratoir/src/main/resources/application.yaml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/MSOrdonnance/src/main/resources/application.properties" beforeDir="false" afterPath="$PROJECT_DIR$/MSOrdonnance/src/main/resources/application.properties" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/MSOrdonnance/src/main/resources/application.yaml" beforeDir="false" afterPath="$PROJECT_DIR$/MSOrdonnance/src/main/resources/application.yaml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/MSPatientMedcin/src/main/java/tn/esprit/spring/patientmedcin/IPatientService.java" beforeDir="false" afterPath="$PROJECT_DIR$/MSPatientMedcin/src/main/java/tn/esprit/spring/patientmedcin/IPatientService.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/MSPatientMedcin/src/main/java/tn/esprit/spring/patientmedcin/PatientController.java" beforeDir="false" afterPath="$PROJECT_DIR$/MSPatientMedcin/src/main/java/tn/esprit/spring/patientmedcin/PatientController.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/MSPatientMedcin/src/main/java/tn/esprit/spring/patientmedcin/PatientService.java" beforeDir="false" afterPath="$PROJECT_DIR$/MSPatientMedcin/src/main/java/tn/esprit/spring/patientmedcin/PatientService.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/MSPatientMedcin/src/main/resources/application.properties" beforeDir="false" afterPath="$PROJECT_DIR$/MSPatientMedcin/src/main/resources/application.properties" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/MSPharmacie/src/main/resources/application.yaml" beforeDir="false" afterPath="$PROJECT_DIR$/MSPharmacie/src/main/resources/application.yaml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/MSUser/src/main/resources/application.properties" beforeDir="false" afterPath="$PROJECT_DIR$/MSUser/src/main/resources/application.properties" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/MSUser/target/classes/application.properties" beforeDir="false" afterPath="$PROJECT_DIR$/MSUser/target/classes/application.properties" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/docker/Dockerfile" beforeDir="false" afterPath="$PROJECT_DIR$/docker/Dockerfile" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/MsFacture/src/main/resources/application.properties" beforeDir="false" afterPath="$PROJECT_DIR$/MsFacture/src/main/resources/application.properties" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/docker-compose.yml" beforeDir="false" afterPath="$PROJECT_DIR$/docker-compose.yml" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -69,6 +61,7 @@
     "node.js.selected.package.tslint": "(autodetect)",
     "nodejs_package_manager_path": "npm",
     "run.configurations.included.in.services": "true",
+    "settings.editor.selected.configurable": "preferences.pluginManager",
     "to.speed.mode.migration.done": "true",
     "vue.rearranger.settings.migration": "true"
   }
@@ -183,7 +176,7 @@
       <option name="number" value="Default" />
       <option name="presentableId" value="Default" />
       <updated>1780433185979</updated>
-      <workItem from="1780433187398" duration="10201000" />
+      <workItem from="1780433187398" duration="15383000" />
     </task>
     <servers />
   </component>

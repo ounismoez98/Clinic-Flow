@@ -157,6 +157,36 @@ services:
       retries: 12
       start_period: 120s
 
+  msfacture:
+    build:
+      <<: *spring-build
+      args:
+        MODULE_DIR: MsFacture
+    container_name: clinicflow-msfacture
+    hostname: msfacture
+    ports:
+      - "8087:8087"
+    environment:
+      <<: *spring-env
+      EUREKA_INSTANCE_HOSTNAME: msfacture
+      SPRING_DATASOURCE_URL: "jdbc:mysql://mysql:3306/clinique?createDatabaseIfNotExist=true&serverTimezone=UTC"
+      SPRING_DATASOURCE_USERNAME: root
+      SPRING_DATASOURCE_PASSWORD: root
+      GEMINI_API_KEY: ${GEMINI_API_KEY:-}
+    depends_on:
+      rabbitmq:
+        condition: service_healthy
+      mysql:
+        condition: service_healthy
+      config-server:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8087/actuator/health"]
+      interval: 15s
+      timeout: 5s
+      retries: 12
+      start_period: 120s
+
   mspatientmedcin:
     build:
       <<: *spring-build
