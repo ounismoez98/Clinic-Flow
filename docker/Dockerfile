@@ -4,9 +4,11 @@
 FROM eclipse-temurin:17-jdk-jammy AS build
 ARG MODULE_DIR
 WORKDIR /build
-COPY ${MODULE_DIR}/mvnw ${MODULE_DIR}/mvnw.cmd ${MODULE_DIR}/.mvn ${MODULE_DIR}/pom.xml ./
+COPY ${MODULE_DIR}/mvnw ${MODULE_DIR}/mvnw.cmd ${MODULE_DIR}/pom.xml ./
+COPY ${MODULE_DIR}/.mvn ./.mvn
 COPY ${MODULE_DIR}/src ./src
-RUN chmod +x mvnw \
+RUN sed -i 's/\r$//' mvnw \
+    && chmod +x mvnw \
     && ./mvnw -q -DskipTests package \
     && cp target/*.jar /build/app.jar
 

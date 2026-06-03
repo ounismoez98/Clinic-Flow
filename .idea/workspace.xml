@@ -4,7 +4,20 @@
     <option name="autoReloadType" value="SELECTIVE" />
   </component>
   <component name="ChangeListManager">
-    <list default="true" id="ef4e5244-133e-46c2-8994-c6ee36e8d9bf" name="Changes" comment="" />
+    <list default="true" id="ef4e5244-133e-46c2-8994-c6ee36e8d9bf" name="Changes" comment="">
+      <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/MSLaboratoir/src/main/resources/application.yaml" beforeDir="false" afterPath="$PROJECT_DIR$/MSLaboratoir/src/main/resources/application.yaml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/MSOrdonnance/src/main/resources/application.properties" beforeDir="false" afterPath="$PROJECT_DIR$/MSOrdonnance/src/main/resources/application.properties" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/MSOrdonnance/src/main/resources/application.yaml" beforeDir="false" afterPath="$PROJECT_DIR$/MSOrdonnance/src/main/resources/application.yaml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/MSPatientMedcin/src/main/java/tn/esprit/spring/patientmedcin/IPatientService.java" beforeDir="false" afterPath="$PROJECT_DIR$/MSPatientMedcin/src/main/java/tn/esprit/spring/patientmedcin/IPatientService.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/MSPatientMedcin/src/main/java/tn/esprit/spring/patientmedcin/PatientController.java" beforeDir="false" afterPath="$PROJECT_DIR$/MSPatientMedcin/src/main/java/tn/esprit/spring/patientmedcin/PatientController.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/MSPatientMedcin/src/main/java/tn/esprit/spring/patientmedcin/PatientService.java" beforeDir="false" afterPath="$PROJECT_DIR$/MSPatientMedcin/src/main/java/tn/esprit/spring/patientmedcin/PatientService.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/MSPatientMedcin/src/main/resources/application.properties" beforeDir="false" afterPath="$PROJECT_DIR$/MSPatientMedcin/src/main/resources/application.properties" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/MSPharmacie/src/main/resources/application.yaml" beforeDir="false" afterPath="$PROJECT_DIR$/MSPharmacie/src/main/resources/application.yaml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/MSUser/src/main/resources/application.properties" beforeDir="false" afterPath="$PROJECT_DIR$/MSUser/src/main/resources/application.properties" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/MSUser/target/classes/application.properties" beforeDir="false" afterPath="$PROJECT_DIR$/MSUser/target/classes/application.properties" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/docker/Dockerfile" beforeDir="false" afterPath="$PROJECT_DIR$/docker/Dockerfile" afterDir="false" />
+    </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
     <option name="HIGHLIGHT_NON_ACTIVE_CHANGELIST" value="false" />
@@ -25,6 +38,10 @@
     "accountId": "6a019ceb-8d65-401c-a465-0f4a0743a17e"
   }
 }]]></component>
+  <component name="KubernetesApiPersistence"><![CDATA[{}]]></component>
+  <component name="KubernetesApiProvider"><![CDATA[{
+  "isMigrated": true
+}]]></component>
   <component name="ProjectColorInfo"><![CDATA[{
   "associatedIndex": 8
 }]]></component>
@@ -35,12 +52,13 @@
   </component>
   <component name="PropertiesComponent"><![CDATA[{
   "keyToString": {
+    "Docker.docker-compose.yml: Compose Deployment.executor": "Run",
     "ModuleVcsDetector.initialDetectionPerformed": "true",
     "RunOnceActivity.ShowReadmeOnStart": "true",
     "RunOnceActivity.TerminalTabsStorage.copyFrom.TerminalArrangementManager.252": "true",
     "RunOnceActivity.git.unshallow": "true",
     "com.intellij.ml.llm.matterhorn.ej.ui.settings.DefaultModelSelectionForGA.v1": "true",
-    "git-widget-placeholder": "Msfacturebranch",
+    "git-widget-placeholder": "main",
     "ignore.virus.scanning.warn.message": "true",
     "junie.onboarding.icon.badge.shown": "true",
     "kotlin-language-version-configured": "true",
@@ -65,7 +83,7 @@
       </set>
     </option>
   </component>
-  <component name="RunManager" selected="Spring Boot.UserApplication">
+  <component name="RunManager" selected="Docker.docker-compose.yml: Compose Deployment">
     <configuration name="DemoApiGatewayApplication" type="SpringBootApplicationConfigurationType" factoryName="Spring Boot" nameIsGenerated="true">
       <module name="demoApiGateway" />
       <option name="SPRING_BOOT_MAIN_CLASS" value="com.example.demoapigateway.DemoApiGatewayApplication" />
@@ -136,6 +154,19 @@
         <option name="Make" enabled="true" />
       </method>
     </configuration>
+    <configuration name="docker-compose.yml: Compose Deployment" type="docker-deploy" factoryName="docker-compose.yml" temporary="true" server-name="Docker">
+      <deployment type="docker-compose.yml">
+        <settings>
+          <option name="sourceFilePath" value="docker-compose.yml" />
+        </settings>
+      </deployment>
+      <method v="2" />
+    </configuration>
+    <recent_temporary>
+      <list>
+        <item itemvalue="Docker.docker-compose.yml: Compose Deployment" />
+      </list>
+    </recent_temporary>
   </component>
   <component name="SharedIndexes">
     <attachedChunks>
@@ -152,7 +183,7 @@
       <option name="number" value="Default" />
       <option name="presentableId" value="Default" />
       <updated>1780433185979</updated>
-      <workItem from="1780433187398" duration="2799000" />
+      <workItem from="1780433187398" duration="10201000" />
     </task>
     <servers />
   </component>
