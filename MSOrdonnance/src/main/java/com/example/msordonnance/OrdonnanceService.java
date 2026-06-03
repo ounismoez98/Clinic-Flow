@@ -1,10 +1,12 @@
 package com.example.msordonnance;
 
+import java.util.List;
+import java.util.stream.Collectors;
+
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
-import java.util.List;
-import java.util.stream.Collectors;
+import com.example.msordonnance.messaging.OrdonnanceMedicamentAddedPublisher;
 
 @Service
 public class OrdonnanceService implements IOrdonnanceService {
@@ -12,6 +14,8 @@ public class OrdonnanceService implements IOrdonnanceService {
     private OrdonnanceRepository ordonnanceRepository;
     @Autowired
     private MedicamentClient medicamentClient;
+    @Autowired
+    private OrdonnanceMedicamentAddedPublisher ordonnanceMedicamentAddedPublisher;
 
     @Override
     public List<Ordonnance> getAll() {
@@ -41,5 +45,6 @@ public class OrdonnanceService implements IOrdonnanceService {
         Ordonnance ordonnance = ordonnanceRepository.findById(ordonnanceId).get();
         ordonnance.getMedicamentsIds().add(medicamentId);
         ordonnanceRepository.save(ordonnance);
+        ordonnanceMedicamentAddedPublisher.publish(ordonnanceId, medicamentId, 1);
     }
 }

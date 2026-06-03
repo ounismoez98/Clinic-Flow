@@ -67,4 +67,13 @@ public class UserService implements IUserService {
         userRepository.deleteById(id);
         return true;
     }
+
+    @Override
+    @Transactional
+    public void linkPatient(int userId, int patientId) {
+        userRepository.findById(userId).ifPresent(user -> {
+            user.setLinkedPatientId(patientId);
+            userRepository.save(user);
+        });
+    }
 }

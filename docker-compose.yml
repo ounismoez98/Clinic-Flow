@@ -1,3 +1,32 @@
+# Clinic-Flow — full stack with Docker Compose
+#
+# Infra only (RabbitMQ + MySQL, run apps locally with run-all-services.ps1):
+#   docker compose up -d rabbitmq mysql
+#
+# Full stack (first run builds images — can take several minutes):
+#   docker compose up -d --build
+#
+# Entry points:
+#   Eureka:    http://localhost:8761
+#   Gateway:   http://localhost:8085
+#   RabbitMQ:  http://localhost:15672  (guest / guest)
+#
+# Optional: copy .env.example to .env and set GEMINI_API_KEY for MSPharmacie AI summary.
+
+name: clinic-flow
+
+x-build: &spring-build
+  context: .
+  dockerfile: docker/Dockerfile
+
+x-spring-env: &spring-env
+  SPRING_CONFIG_IMPORT: optional:configserver:http://config-server:8888
+  EUREKA_CLIENT_SERVICE_URL_DEFAULTZONE: http://eureka:8761/eureka
+  SPRING_RABBITMQ_HOST: rabbitmq
+  SPRING_RABBITMQ_PORT: "5672"
+  SPRING_RABBITMQ_USERNAME: guest
+  SPRING_RABBITMQ_PASSWORD: guest
+
 services:
   rabbitmq:
     image: rabbitmq:3-management
@@ -8,3 +37,209 @@ services:
     environment:
       RABBITMQ_DEFAULT_USER: guest
       RABBITMQ_DEFAULT_PASS: guest
+    healthcheck:
+      test: ["CMD", "rabbitmq-diagnostics", "-q", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 20s
+
+  mysql:
+    image: mysql:8.0
+    container_name: clinicflow-mysql
+    ports:
+      - "3306:3306"
+    environment:
+      MYSQL_ROOT_PASSWORD: root
+      MYSQL_DATABASE: clinic_pharmacie
+    volumes:
+      - clinicflow_mysql_data:/var/lib/mysql
+    healthcheck:
+      test: ["CMD", "mysqladmin", "ping", "-h", "127.0.0.1", "-uroot", "-proot"]
+      interval: 5s
+      timeout: 5s
+      retries: 12
+      start_period: 40s
+
+  eureka:
+    build:
+      <<: *spring-build
+      args:
+        MODULE_DIR: demoEurekaServer
+    container_name: clinicflow-eureka
+    hostname: eureka
+    ports:
+      - "8761:8761"
+    environment:
+      EUREKA_INSTANCE_HOSTNAME: eureka
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8761/"]
+      interval: 10s
+      timeout: 5s
+      retries: 12
+      start_period: 60s
+
+  config-server:
+    build:
+      <<: *spring-build
+      args:
+        MODULE_DIR: demoConfigServer
+    container_name: clinicflow-config-server
+    hostname: config-server
+    ports:
+      - "8888:8888"
+    environment:
+      EUREKA_INSTANCE_HOSTNAME: config-server
+      EUREKA_CLIENT_SERVICE_URL_DEFAULTZONE: http://eureka:8761/eureka
+    depends_on:
+      eureka:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8888/MSPharmacie/default"]
+      interval: 10s
+      timeout: 5s
+      retries: 18
+      start_period: 90s
+
+  mspharmacie:
+    build:
+      <<: *spring-build
+      args:
+        MODULE_DIR: MSPharmacie
+    container_name: clinicflow-mspharmacie
+    hostname: mspharmacie
+    ports:
+      - "8086:8086"
+    environment:
+      <<: *spring-env
+      EUREKA_INSTANCE_HOSTNAME: mspharmacie
+      SPRING_DATASOURCE_URL: jdbc:mysql://mysql:3306/clinic_pharmacie?useSSL=false&allowPublicKeyRetrieval=true&serverTimezone=UTC
+      SPRING_DATASOURCE_USERNAME: root
+      SPRING_DATASOURCE_PASSWORD: root
+      GEMINI_API_KEY: ${GEMINI_API_KEY:-}
+    depends_on:
+      rabbitmq:
+        condition: service_healthy
+      mysql:
+        condition: service_healthy
+      config-server:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8086/actuator/health"]
+      interval: 15s
+      timeout: 5s
+      retries: 12
+      start_period: 120s
+
+  msordonnance:
+    build:
+      <<: *spring-build
+      args:
+        MODULE_DIR: MSOrdonnance
+    container_name: clinicflow-msordonnance
+    hostname: msordonnance
+    ports:
+      - "8081:8081"
+    environment:
+      <<: *spring-env
+      EUREKA_INSTANCE_HOSTNAME: msordonnance
+    depends_on:
+      rabbitmq:
+        condition: service_healthy
+      config-server:
+        condition: service_healthy
+      mspharmacie:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8081/actuator/health"]
+      interval: 15s
+      timeout: 5s
+      retries: 12
+      start_period: 120s
+
+  mspatientmedcin:
+    build:
+      <<: *spring-build
+      args:
+        MODULE_DIR: MSPatientMedcin
+    container_name: clinicflow-mspatientmedcin
+    hostname: mspatientmedcin
+    ports:
+      - "8082:8082"
+    environment:
+      <<: *spring-env
+      EUREKA_INSTANCE_HOSTNAME: mspatientmedcin
+    volumes:
+      - clinicflow_patient_h2:/app/Database/Data
+    depends_on:
+      rabbitmq:
+        condition: service_healthy
+      config-server:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8082/actuator/health"]
+      interval: 15s
+      timeout: 5s
+      retries: 12
+      start_period: 120s
+
+  msuser:
+    build:
+      <<: *spring-build
+      args:
+        MODULE_DIR: MSUser
+    container_name: clinicflow-msuser
+    hostname: msuser
+    ports:
+      - "8083:8083"
+    environment:
+      <<: *spring-env
+      EUREKA_INSTANCE_HOSTNAME: msuser
+    volumes:
+      - clinicflow_user_h2:/app/Database/Data
+    depends_on:
+      rabbitmq:
+        condition: service_healthy
+      config-server:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8083/actuator/health"]
+      interval: 15s
+      timeout: 5s
+      retries: 12
+      start_period: 120s
+
+  api-gateway:
+    build:
+      <<: *spring-build
+      args:
+        MODULE_DIR: demoApiGateway
+    container_name: clinicflow-api-gateway
+    hostname: api-gateway
+    ports:
+      - "8085:8085"
+    environment:
+      EUREKA_CLIENT_SERVICE_URL_DEFAULTZONE: http://eureka:8761/eureka
+      EUREKA_INSTANCE_HOSTNAME: api-gateway
+    depends_on:
+      eureka:
+        condition: service_healthy
+      mspharmacie:
+        condition: service_healthy
+      msordonnance:
+        condition: service_healthy
+      mspatientmedcin:
+        condition: service_healthy
+      msuser:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8085/"]
+      interval: 15s
+      timeout: 5s
+      retries: 12
+      start_period: 90s
+
+volumes:
+  clinicflow_mysql_data:
+  clinicflow_patient_h2:
+  clinicflow_user_h2:
