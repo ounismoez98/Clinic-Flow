@@ -1,0 +1,197 @@
+{
+	"info": {
+		"name": "MSOrdonnance Tests",
+		"description": "Postman collection to test all endpoints of the MSOrdonnance microservice.",
+		"schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+	},
+	"variable": [
+		{
+			"key": "base_url",
+			"value": "http://localhost:8081",
+			"type": "string"
+		}
+	],
+	"item": [
+		{
+			"name": "Get Hello",
+			"request": {
+				"method": "GET",
+				"header": [],
+				"url": {
+					"raw": "{{base_url}}/ordonnances/hello",
+					"host": ["{{base_url}}"],
+					"path": ["ordonnances", "hello"]
+				},
+				"description": "Returns a simple hello message."
+			},
+			"response": []
+		},
+		{
+			"name": "Get All Ordonnances",
+			"request": {
+				"method": "GET",
+				"header": [],
+				"url": {
+					"raw": "{{base_url}}/ordonnances",
+					"host": ["{{base_url}}"],
+					"path": ["ordonnances"]
+				},
+				"description": "Fetches a list of all ordonnances."
+			},
+			"response": []
+		},
+		{
+			"name": "Create Ordonnance",
+			"request": {
+				"method": "POST",
+				"header": [
+					{
+						"key": "Content-Type",
+						"value": "application/json"
+					}
+				],
+				"body": {
+					"mode": "raw",
+					"raw": "{\n  \"nom\": \"Doe\",\n  \"prenom\": \"John\",\n  \"email\": \"john.doe@example.com\",\n  \"patientId\": 1,\n  \"medcinId\": 2,\n  \"laboratoireId\": 3,\n  \"type\": \"Blood Test\",\n  \"status\": \"PENDING\"\n}"
+				},
+				"url": {
+					"raw": "{{base_url}}/ordonnances",
+					"host": ["{{base_url}}"],
+					"path": ["ordonnances"]
+				},
+				"description": "Creates a new ordonnance."
+			},
+			"response": []
+		},
+		{
+			"name": "Update Ordonnance",
+			"request": {
+				"method": "PUT",
+				"header": [
+					{
+						"key": "Content-Type",
+						"value": "application/json"
+					}
+				],
+				"body": {
+					"mode": "raw",
+					"raw": "{\n  \"nom\": \"Doe Updated\",\n  \"prenom\": \"John Updated\",\n  \"email\": \"john.updated@example.com\"\n}"
+				},
+				"url": {
+					"raw": "{{base_url}}/ordonnances/1",
+					"host": ["{{base_url}}"],
+					"path": ["ordonnances", "1"]
+				},
+				"description": "Updates an existing ordonnance by ID."
+			},
+			"response": []
+		},
+		{
+			"name": "Delete Ordonnance",
+			"request": {
+				"method": "DELETE",
+				"header": [],
+				"url": {
+					"raw": "{{base_url}}/ordonnances/1",
+					"host": ["{{base_url}}"],
+					"path": ["ordonnances", "1"]
+				},
+				"description": "Deletes an existing ordonnance by ID."
+			},
+			"response": []
+		},
+		{
+			"name": "Get All Medicaments",
+			"request": {
+				"method": "GET",
+				"header": [],
+				"url": {
+					"raw": "{{base_url}}/ordonnances/medicaments",
+					"host": ["{{base_url}}"],
+					"path": ["ordonnances", "medicaments"]
+				},
+				"description": "Fetches a list of all medicaments."
+			},
+			"response": []
+		},
+		{
+			"name": "Get Medicament by ID",
+			"request": {
+				"method": "GET",
+				"header": [],
+				"url": {
+					"raw": "{{base_url}}/ordonnances/medicaments/1",
+					"host": ["{{base_url}}"],
+					"path": ["ordonnances", "medicaments", "1"]
+				},
+				"description": "Fetches a specific medicament by its ID."
+			},
+			"response": []
+		},
+		{
+			"name": "Get Medicaments by Ordonnance ID",
+			"request": {
+				"method": "GET",
+				"header": [],
+				"url": {
+					"raw": "{{base_url}}/ordonnances/1/medicaments",
+					"host": ["{{base_url}}"],
+					"path": ["ordonnances", "1", "medicaments"]
+				},
+				"description": "Fetches the list of medicaments associated with a specific ordonnance."
+			},
+			"response": []
+		},
+		{
+			"name": "Add Medicament to Ordonnance",
+			"request": {
+				"method": "POST",
+				"header": [],
+				"url": {
+					"raw": "{{base_url}}/ordonnances/1/medicaments/1",
+					"host": ["{{base_url}}"],
+					"path": ["ordonnances", "1", "medicaments", "1"]
+				},
+				"description": "Adds a medicament to an ordonnance."
+			},
+			"response": []
+		},
+		{
+			"name": "Publish Analysis Request",
+			"request": {
+				"method": "POST",
+				"header": [
+					{
+						"key": "Content-Type",
+						"value": "application/json"
+					}
+				],
+				"body": {
+					"mode": "raw",
+					"raw": "{\n  \"patientId\": 1,\n  \"medcinId\": 2,\n  \"laboratoireId\": 3,\n  \"type\": \"Blood Test\",\n  \"status\": \"PENDING\"\n}"
+				},
+				"url": {
+					"raw": "{{base_url}}/ordonnances/analysis-requests",
+					"host": ["{{base_url}}"],
+					"path": ["ordonnances", "analysis-requests"]
+				},
+				"description": "Publishes an analysis request message to the message broker."
+			},
+			"response": []
+		},
+		{
+			"name": "Get Welcome",
+			"request": {
+				"method": "GET",
+				"header": [],
+				"url": {
+					"raw": "{{base_url}}/ordonnances/welcome",
+					"host": ["{{base_url}}"],
+					"path": ["ordonnances", "welcome"]
+				},
+				"description": "Returns a welcome message containing properties from the configuration."
+			},
+			"response": []
+		}
+	]
+}
