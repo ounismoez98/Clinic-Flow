@@ -1,0 +1,817 @@
+{
+  "info": {
+    "_postman_id": "clinic-flow-collection-v1",
+    "name": "Clinic-Flow Microservices",
+    "description": "Full API collection for Clinic-Flow microservices: MSPatientMedcin (8082), MSUser (8083), MSLaboratoir (8081), MSOrdonnance (8081), MSRendezVous (8081). All services are also accessible via the API Gateway on port 8085.",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "variable": [
+    { "key": "gateway", "value": "http://localhost:8085", "type": "string" },
+    { "key": "patient_medcin_url", "value": "http://localhost:8082", "type": "string" },
+    { "key": "user_url", "value": "http://localhost:8083", "type": "string" },
+    { "key": "laboratoir_url", "value": "http://localhost:8081", "type": "string" },
+    { "key": "ordonnance_url", "value": "http://localhost:8081", "type": "string" },
+    { "key": "rendezvous_url", "value": "http://localhost:8081", "type": "string" }
+  ],
+  "item": [
+    {
+      "name": "MSPatientMedcin — Patients",
+      "description": "CRUD operations for patients. POST/PUT also publish a RabbitMQ message to MSUser via the clinic.patient.exchange.",
+      "item": [
+        {
+          "name": "Get All Patients",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{patient_medcin_url}}/patients",
+              "host": ["{{patient_medcin_url}}"],
+              "path": ["patients"]
+            },
+            "description": "Returns a list of all patients."
+          },
+          "response": []
+        },
+        {
+          "name": "Get Patient By ID (with Linked User Account)",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{patient_medcin_url}}/patients/1/with-linked-account",
+              "host": ["{{patient_medcin_url}}"],
+              "path": ["patients", "1", "with-linked-account"]
+            },
+            "description": "Returns the patient along with their linked MSUser account (fetched via Feign). Replace '1' with the target patient ID."
+          },
+          "response": []
+        },
+        {
+          "name": "Create Patient",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"nom\": \"Ben Ali\",\n  \"prenom\": \"Yassine\",\n  \"email\": \"yassine.benali@clinic.tn\",\n  \"userId\": 1,\n  \"favoriteMedecinIds\": []\n}",
+              "options": { "raw": { "language": "json" } }
+            },
+            "url": {
+              "raw": "{{patient_medcin_url}}/patients",
+              "host": ["{{patient_medcin_url}}"],
+              "path": ["patients"]
+            },
+            "description": "Creates a new patient. Publishes a PatientUserLinkedMessage to RabbitMQ (queue: patient.user.linked.queue) so MSUser can link the account. Returns HTTP 201."
+          },
+          "response": []
+        },
+        {
+          "name": "Update Patient",
+          "request": {
+            "method": "PUT",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"nom\": \"Ben Ali\",\n  \"prenom\": \"Yassine Updated\",\n  \"email\": \"yassine.updated@clinic.tn\",\n  \"userId\": 1,\n  \"favoriteMedecinIds\": [2, 3]\n}",
+              "options": { "raw": { "language": "json" } }
+            },
+            "url": {
+              "raw": "{{patient_medcin_url}}/patients/1",
+              "host": ["{{patient_medcin_url}}"],
+              "path": ["patients", "1"]
+            },
+            "description": "Updates an existing patient. Replace '1' with the target patient ID."
+          },
+          "response": []
+        },
+        {
+          "name": "Delete Patient",
+          "request": {
+            "method": "DELETE",
+            "header": [],
+            "url": {
+              "raw": "{{patient_medcin_url}}/patients/1",
+              "host": ["{{patient_medcin_url}}"],
+              "path": ["patients", "1"]
+            },
+            "description": "Deletes a patient by ID. Returns HTTP 204. Replace '1' with the target patient ID."
+          },
+          "response": []
+        },
+        {
+          "name": "Get Favorite Medecins of Patient",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{patient_medcin_url}}/patients/1/favorite-medecins",
+              "host": ["{{patient_medcin_url}}"],
+              "path": ["patients", "1", "favorite-medecins"]
+            },
+            "description": "Returns the list of favorite medecins for the given patient ID."
+          },
+          "response": []
+        },
+        {
+          "name": "Add Favorite Medecin to Patient",
+          "request": {
+            "method": "POST",
+            "header": [],
+            "url": {
+              "raw": "{{patient_medcin_url}}/patients/1/favorite-medecins/2",
+              "host": ["{{patient_medcin_url}}"],
+              "path": ["patients", "1", "favorite-medecins", "2"]
+            },
+            "description": "Adds medecin with ID '2' to the favorite list of patient with ID '1'. No request body needed."
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "MSPatientMedcin — Medecins",
+      "description": "CRUD operations for medecins (doctors).",
+      "item": [
+        {
+          "name": "Hello Medecin",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{patient_medcin_url}}/medecins/hello",
+              "host": ["{{patient_medcin_url}}"],
+              "path": ["medecins", "hello"]
+            },
+            "description": "Health-check / greeting endpoint."
+          },
+          "response": []
+        },
+        {
+          "name": "Get All Medecins",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{patient_medcin_url}}/medecins",
+              "host": ["{{patient_medcin_url}}"],
+              "path": ["medecins"]
+            },
+            "description": "Returns a list of all medecins."
+          },
+          "response": []
+        },
+        {
+          "name": "Get Medecin By ID",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{patient_medcin_url}}/medecins/1",
+              "host": ["{{patient_medcin_url}}"],
+              "path": ["medecins", "1"]
+            },
+            "description": "Returns a single medecin by ID."
+          },
+          "response": []
+        },
+        {
+          "name": "Create Medecin",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"nom\": \"Trabelsi\",\n  \"prenom\": \"Sami\",\n  \"email\": \"sami.trabelsi@clinic.tn\",\n  \"specialite\": \"Cardiologie\",\n  \"userId\": 2\n}",
+              "options": { "raw": { "language": "json" } }
+            },
+            "url": {
+              "raw": "{{patient_medcin_url}}/medecins",
+              "host": ["{{patient_medcin_url}}"],
+              "path": ["medecins"]
+            },
+            "description": "Creates a new medecin. Returns HTTP 201.\n\nSpecialite examples: Cardiologie, Dermatologie, Neurologie, Pédiatrie, Chirurgie, Gynécologie, Ophtalmologie, Radiologie."
+          },
+          "response": []
+        },
+        {
+          "name": "Update Medecin",
+          "request": {
+            "method": "PUT",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"nom\": \"Trabelsi\",\n  \"prenom\": \"Sami Updated\",\n  \"email\": \"sami.updated@clinic.tn\",\n  \"specialite\": \"Neurologie\",\n  \"userId\": 2\n}",
+              "options": { "raw": { "language": "json" } }
+            },
+            "url": {
+              "raw": "{{patient_medcin_url}}/medecins/1",
+              "host": ["{{patient_medcin_url}}"],
+              "path": ["medecins", "1"]
+            },
+            "description": "Updates a medecin by ID. Replace '1' with the target medecin ID."
+          },
+          "response": []
+        },
+        {
+          "name": "Delete Medecin",
+          "request": {
+            "method": "DELETE",
+            "header": [],
+            "url": {
+              "raw": "{{patient_medcin_url}}/medecins/1",
+              "host": ["{{patient_medcin_url}}"],
+              "path": ["medecins", "1"]
+            },
+            "description": "Deletes a medecin by ID. Returns HTTP 204."
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "MSUser — Users",
+      "description": "CRUD operations for user accounts. Linked to patients via RabbitMQ consumer (PatientUserLinkedConsumer).",
+      "item": [
+        {
+          "name": "Hello User",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{user_url}}/users/hello",
+              "host": ["{{user_url}}"],
+              "path": ["users", "hello"]
+            },
+            "description": "Health-check / greeting endpoint."
+          },
+          "response": []
+        },
+        {
+          "name": "Get All Users",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{user_url}}/users",
+              "host": ["{{user_url}}"],
+              "path": ["users"]
+            },
+            "description": "Returns a list of all users."
+          },
+          "response": []
+        },
+        {
+          "name": "Get User By ID",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{user_url}}/users/1",
+              "host": ["{{user_url}}"],
+              "path": ["users", "1"]
+            },
+            "description": "Returns a single user by numeric ID."
+          },
+          "response": []
+        },
+        {
+          "name": "Get User By Username",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{user_url}}/users/username/yassine",
+              "host": ["{{user_url}}"],
+              "path": ["users", "username", "yassine"]
+            },
+            "description": "Returns a user by their username. Replace 'yassine' with the target username."
+          },
+          "response": []
+        },
+        {
+          "name": "Get Users By Role",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{user_url}}/users/role/PATIENT",
+              "host": ["{{user_url}}"],
+              "path": ["users", "role", "PATIENT"]
+            },
+            "description": "Returns all users with a given role. Valid values: PATIENT, MEDECIN, ADMIN."
+          },
+          "response": []
+        },
+        {
+          "name": "Create User",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"username\": \"yassine\",\n  \"password\": \"secret123\",\n  \"email\": \"yassine@clinic.tn\",\n  \"role\": \"PATIENT\",\n  \"linkedPatientId\": null\n}",
+              "options": { "raw": { "language": "json" } }
+            },
+            "url": {
+              "raw": "{{user_url}}/users",
+              "host": ["{{user_url}}"],
+              "path": ["users"]
+            },
+            "description": "Creates a new user account. Returns HTTP 201.\n\nRole must be one of: PATIENT, MEDECIN, ADMIN.\nlinkedPatientId is set automatically when a patient is created in MSPatientMedcin (via RabbitMQ)."
+          },
+          "response": []
+        },
+        {
+          "name": "Create User (MEDECIN role)",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"username\": \"dr.sami\",\n  \"password\": \"secure456\",\n  \"email\": \"dr.sami@clinic.tn\",\n  \"role\": \"MEDECIN\",\n  \"linkedPatientId\": null\n}",
+              "options": { "raw": { "language": "json" } }
+            },
+            "url": {
+              "raw": "{{user_url}}/users",
+              "host": ["{{user_url}}"],
+              "path": ["users"]
+            },
+            "description": "Creates a new user with MEDECIN role."
+          },
+          "response": []
+        },
+        {
+          "name": "Create User (ADMIN role)",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"username\": \"admin\",\n  \"password\": \"adminpass\",\n  \"email\": \"admin@clinic.tn\",\n  \"role\": \"ADMIN\",\n  \"linkedPatientId\": null\n}",
+              "options": { "raw": { "language": "json" } }
+            },
+            "url": {
+              "raw": "{{user_url}}/users",
+              "host": ["{{user_url}}"],
+              "path": ["users"]
+            },
+            "description": "Creates a new user with ADMIN role."
+          },
+          "response": []
+        },
+        {
+          "name": "Update User",
+          "request": {
+            "method": "PUT",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"username\": \"yassine_updated\",\n  \"password\": \"newpassword\",\n  \"email\": \"yassine.updated@clinic.tn\",\n  \"role\": \"PATIENT\",\n  \"linkedPatientId\": 1\n}",
+              "options": { "raw": { "language": "json" } }
+            },
+            "url": {
+              "raw": "{{user_url}}/users/1",
+              "host": ["{{user_url}}"],
+              "path": ["users", "1"]
+            },
+            "description": "Updates an existing user. Replace '1' with the target user ID."
+          },
+          "response": []
+        },
+        {
+          "name": "Delete User",
+          "request": {
+            "method": "DELETE",
+            "header": [],
+            "url": {
+              "raw": "{{user_url}}/users/1",
+              "host": ["{{user_url}}"],
+              "path": ["users", "1"]
+            },
+            "description": "Deletes a user by ID. Returns HTTP 204."
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "MSLaboratoir — Laboratoires",
+      "description": "Laboratory management. Publishes analysis requests and completions via RabbitMQ.",
+      "item": [
+        {
+          "name": "Hello Laboratoire",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{laboratoir_url}}/laboratoires/hello",
+              "host": ["{{laboratoir_url}}"],
+              "path": ["laboratoires", "hello"]
+            },
+            "description": "Health-check endpoint."
+          },
+          "response": []
+        },
+        {
+          "name": "Welcome Laboratoire",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{laboratoir_url}}/laboratoires/welcome",
+              "host": ["{{laboratoir_url}}"],
+              "path": ["laboratoires", "welcome"]
+            },
+            "description": "Welcome endpoint."
+          },
+          "response": []
+        },
+        {
+          "name": "Get All Laboratoires",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{laboratoir_url}}/laboratoires",
+              "host": ["{{laboratoir_url}}"],
+              "path": ["laboratoires"]
+            },
+            "description": "Returns all laboratoires in the database."
+          },
+          "response": []
+        },
+        {
+          "name": "Publish Analysis Request (RabbitMQ)",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"patientId\": 1,\n  \"medcinId\": 2,\n  \"laboratoireId\": 1,\n  \"type\": \"Bilan sanguin\",\n  \"status\": \"PENDING\"\n}",
+              "options": { "raw": { "language": "json" } }
+            },
+            "url": {
+              "raw": "{{laboratoir_url}}/laboratoires/analysis-requests",
+              "host": ["{{laboratoir_url}}"],
+              "path": ["laboratoires", "analysis-requests"]
+            },
+            "description": "Publishes an analysis request message to RabbitMQ.\n\ntype examples: Bilan sanguin, Radiographie, IRM, Scanner, Echographie, Analyse urinaire.\nstatus: PENDING, IN_PROGRESS, COMPLETED, CANCELLED."
+          },
+          "response": []
+        },
+        {
+          "name": "Publish Analysis Completed (RabbitMQ)",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"analysisId\": 1,\n  \"ordonnanceId\": 1,\n  \"patientId\": 1,\n  \"medcinId\": 2,\n  \"result\": \"Résultats normaux. Aucune anomalie détectée.\"\n}",
+              "options": { "raw": { "language": "json" } }
+            },
+            "url": {
+              "raw": "{{laboratoir_url}}/laboratoires/analysis-completed",
+              "host": ["{{laboratoir_url}}"],
+              "path": ["laboratoires", "analysis-completed"]
+            },
+            "description": "Publishes an analysis-completed message to RabbitMQ once laboratory results are ready."
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "MSOrdonnance — Ordonnances",
+      "description": "Prescription management with medication linking.",
+      "item": [
+        {
+          "name": "Hello Ordonnance",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{ordonnance_url}}/ordonnances/hello",
+              "host": ["{{ordonnance_url}}"],
+              "path": ["ordonnances", "hello"]
+            },
+            "description": "Health-check endpoint."
+          },
+          "response": []
+        },
+        {
+          "name": "Welcome Ordonnance",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{ordonnance_url}}/ordonnances/welcome",
+              "host": ["{{ordonnance_url}}"],
+              "path": ["ordonnances", "welcome"]
+            },
+            "description": "Welcome endpoint."
+          },
+          "response": []
+        },
+        {
+          "name": "Get All Ordonnances",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{ordonnance_url}}/ordonnances",
+              "host": ["{{ordonnance_url}}"],
+              "path": ["ordonnances"]
+            },
+            "description": "Returns all ordonnances (prescriptions)."
+          },
+          "response": []
+        },
+        {
+          "name": "Get All Medicaments",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{ordonnance_url}}/ordonnances/medicaments",
+              "host": ["{{ordonnance_url}}"],
+              "path": ["ordonnances", "medicaments"]
+            },
+            "description": "Returns all available medicaments."
+          },
+          "response": []
+        },
+        {
+          "name": "Get Medicament By ID",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{ordonnance_url}}/ordonnances/medicaments/1",
+              "host": ["{{ordonnance_url}}"],
+              "path": ["ordonnances", "medicaments", "1"]
+            },
+            "description": "Returns a single medicament by ID. Replace '1' with the target medicament ID."
+          },
+          "response": []
+        },
+        {
+          "name": "Get Medicaments By Ordonnance",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{ordonnance_url}}/ordonnances/1/medicaments",
+              "host": ["{{ordonnance_url}}"],
+              "path": ["ordonnances", "1", "medicaments"]
+            },
+            "description": "Returns all medicaments linked to a specific ordonnance. Replace '1' with the ordonnance ID."
+          },
+          "response": []
+        },
+        {
+          "name": "Add Medicament to Ordonnance",
+          "request": {
+            "method": "POST",
+            "header": [],
+            "url": {
+              "raw": "{{ordonnance_url}}/ordonnances/1/medicaments/2",
+              "host": ["{{ordonnance_url}}"],
+              "path": ["ordonnances", "1", "medicaments", "2"]
+            },
+            "description": "Links medicament with ID '2' to ordonnance with ID '1'. No request body needed."
+          },
+          "response": []
+        },
+        {
+          "name": "Publish Analysis Request from Ordonnance (RabbitMQ)",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"patientId\": 1,\n  \"medcinId\": 2,\n  \"laboratoireId\": 1,\n  \"type\": \"Bilan lipidique\",\n  \"status\": \"PENDING\"\n}",
+              "options": { "raw": { "language": "json" } }
+            },
+            "url": {
+              "raw": "{{ordonnance_url}}/ordonnances/analysis-requests",
+              "host": ["{{ordonnance_url}}"],
+              "path": ["ordonnances", "analysis-requests"]
+            },
+            "description": "Publishes an analysis request from an ordonnance to RabbitMQ for the laboratory service to consume."
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "MSRendezVous — Rendez-Vous",
+      "description": "Appointment management.",
+      "item": [
+        {
+          "name": "Hello RendezVous",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{rendezvous_url}}/rendezvous/hello",
+              "host": ["{{rendezvous_url}}"],
+              "path": ["rendezvous", "hello"]
+            },
+            "description": "Health-check endpoint."
+          },
+          "response": []
+        },
+        {
+          "name": "Get All RendezVous",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{rendezvous_url}}/rendezvous/getall",
+              "host": ["{{rendezvous_url}}"],
+              "path": ["rendezvous", "getall"]
+            },
+            "description": "Returns all rendez-vous (appointments)."
+          },
+          "response": []
+        },
+        {
+          "name": "Get RendezVous By ID",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{rendezvous_url}}/rendezvous/rendezvousbyid/1",
+              "host": ["{{rendezvous_url}}"],
+              "path": ["rendezvous", "rendezvousbyid", "1"]
+            },
+            "description": "Returns a single appointment by ID. Replace '1' with the target ID."
+          },
+          "response": []
+        },
+        {
+          "name": "Create RendezVous",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"date\": \"2026-05-15\",\n  \"cause\": \"Consultation de routine\",\n  \"patient\": \"Yassine Ben Ali\",\n  \"medcin\": \"Dr. Sami Trabelsi\"\n}",
+              "options": { "raw": { "language": "json" } }
+            },
+            "url": {
+              "raw": "{{rendezvous_url}}/rendezvous/addrendezvous",
+              "host": ["{{rendezvous_url}}"],
+              "path": ["rendezvous", "addrendezvous"]
+            },
+            "description": "Creates a new appointment. Returns HTTP 201.\n\ncause examples: Consultation de routine, Urgence, Suivi post-opératoire, Bilan de santé, Vaccination."
+          },
+          "response": []
+        },
+        {
+          "name": "Update RendezVous",
+          "request": {
+            "method": "PUT",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"date\": \"2026-05-20\",\n  \"cause\": \"Consultation urgente\",\n  \"patient\": \"Yassine Ben Ali\",\n  \"medcin\": \"Dr. Sami Trabelsi\"\n}",
+              "options": { "raw": { "language": "json" } }
+            },
+            "url": {
+              "raw": "{{rendezvous_url}}/rendezvous/updaterendezvous/1",
+              "host": ["{{rendezvous_url}}"],
+              "path": ["rendezvous", "updaterendezvous", "1"]
+            },
+            "description": "Updates an existing appointment. Replace '1' with the target appointment ID."
+          },
+          "response": []
+        },
+        {
+          "name": "Delete RendezVous",
+          "request": {
+            "method": "DELETE",
+            "header": [],
+            "url": {
+              "raw": "{{rendezvous_url}}/rendezvous/deleterendezvous/1",
+              "host": ["{{rendezvous_url}}"],
+              "path": ["rendezvous", "deleterendezvous", "1"]
+            },
+            "description": "Deletes an appointment by ID. Returns HTTP 204."
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "Via API Gateway (port 8085)",
+      "description": "All services are also reachable via the API Gateway on port 8085. Same payloads as the direct calls above — only the base URL changes.",
+      "item": [
+        {
+          "name": "[Gateway] Get All Patients",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{gateway}}/patients",
+              "host": ["{{gateway}}"],
+              "path": ["patients"]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "[Gateway] Get All Medecins",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{gateway}}/medecins",
+              "host": ["{{gateway}}"],
+              "path": ["medecins"]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "[Gateway] Get All Users",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{gateway}}/users",
+              "host": ["{{gateway}}"],
+              "path": ["users"]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "[Gateway] Get All Laboratoires",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{gateway}}/laboratoires",
+              "host": ["{{gateway}}"],
+              "path": ["laboratoires"]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "[Gateway] Get All Ordonnances",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{gateway}}/ordonnances",
+              "host": ["{{gateway}}"],
+              "path": ["ordonnances"]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "[Gateway] Get All RendezVous",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{gateway}}/rendezvous/getall",
+              "host": ["{{gateway}}"],
+              "path": ["rendezvous", "getall"]
+            }
+          },
+          "response": []
+        }
+      ]
+    }
+  ]
+}

@@ -13,6 +13,7 @@
         <module name="MSNotification" />
         <module name="demoApiGateway" />
         <module name="demoEurekaServer" />
+        <module name="demoConfigServer" />
         <module name="MSPatientMedcin" />
         <module name="MSUser" />
         <module name="MSRendezVous" />

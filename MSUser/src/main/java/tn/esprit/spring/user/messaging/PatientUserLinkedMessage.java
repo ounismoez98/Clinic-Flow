@@ -9,6 +9,12 @@ public class PatientUserLinkedMessage {
 	public PatientUserLinkedMessage() {
 	}
 
+	public PatientUserLinkedMessage(int patientId, int userId, String patientEmail) {
+		this.patientId = patientId;
+		this.userId = userId;
+		this.patientEmail = patientEmail;
+	}
+
 	public int getPatientId() {
 		return patientId;
 	}
