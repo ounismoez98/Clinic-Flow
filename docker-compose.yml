@@ -165,7 +165,7 @@ services:
     container_name: clinicflow-msfacture
     hostname: msfacture
     ports:
-      - "8087:8087"
+      - "8087:8084"
     environment:
       <<: *spring-env
       EUREKA_INSTANCE_HOSTNAME: msfacture
