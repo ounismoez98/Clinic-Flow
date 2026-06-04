@@ -1,0 +1,217 @@
+<!-- ===== NAVBAR ===== -->
+<header class="fixed top-0 left-0 right-0 z-50 bg-white/95 backdrop-blur border-b border-gray-100 shadow-sm">
+  <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+    <div class="flex items-center justify-between h-16">
+      <div class="flex items-center gap-3">
+        <div class="w-9 h-9 rounded-xl bg-gradient-to-br from-blue-600 to-teal-500 flex items-center justify-center shadow">
+          <svg class="w-5 h-5 text-white" fill="none" stroke="currentColor" stroke-width="2.2" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" d="M4.5 12.75l7.5-7.5 7.5 7.5M4.5 19.5l7.5-7.5 7.5 7.5"/>
+          </svg>
+        </div>
+        <span class="text-xl font-bold text-gray-900 tracking-tight">Clinic<span class="text-blue-600">Flow</span></span>
+      </div>
+      <nav class="hidden md:flex items-center gap-1">
+        <a *ngFor="let link of navLinks" href="#"
+           class="px-4 py-2 rounded-lg text-sm font-medium text-gray-600 hover:text-blue-600 hover:bg-blue-50 transition-all duration-150">
+          {{ link }}
+        </a>
+      </nav>
+      <div class="hidden md:flex items-center gap-3">
+        <a routerLink="/login" class="px-4 py-2 text-sm font-medium text-gray-600 hover:text-blue-600 transition-colors cursor-pointer">Sign In</a>
+        <a routerLink="/login" class="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white text-sm font-semibold rounded-lg shadow-sm transition-all duration-150 hover:shadow-md cursor-pointer">
+          Get Started
+        </a>
+      </div>
+      <button (click)="toggleMenu()" class="md:hidden p-2 rounded-lg text-gray-500 hover:bg-gray-100 transition">
+        <svg class="w-6 h-6" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+          <path *ngIf="!menuOpen" stroke-linecap="round" stroke-linejoin="round" d="M4 6h16M4 12h16M4 18h16"/>
+          <path *ngIf="menuOpen" stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12"/>
+        </svg>
+      </button>
+    </div>
+  </div>
+  <div *ngIf="menuOpen" class="md:hidden border-t border-gray-100 bg-white px-4 py-3 space-y-1">
+    <a *ngFor="let link of navLinks" href="#"
+       class="block px-4 py-2 rounded-lg text-sm font-medium text-gray-700 hover:bg-blue-50 hover:text-blue-600 transition">
+      {{ link }}
+    </a>
+    <div class="pt-2 flex flex-col gap-2">
+      <a routerLink="/login" class="w-full text-center px-4 py-2 text-sm font-medium text-gray-600 border border-gray-200 rounded-lg hover:bg-gray-50 transition">Sign In</a>
+      <a routerLink="/login" class="w-full text-center px-4 py-2 bg-blue-600 text-white text-sm font-semibold rounded-lg hover:bg-blue-700 transition">Get Started</a>
+    </div>
+  </div>
+</header>
+
+<!-- ===== HERO ===== -->
+<section class="pt-24 pb-16 bg-gradient-to-br from-slate-50 via-blue-50 to-teal-50 relative overflow-hidden">
+  <div class="absolute top-0 right-0 w-96 h-96 bg-blue-200/30 rounded-full blur-3xl -translate-y-1/2 translate-x-1/2"></div>
+  <div class="absolute bottom-0 left-0 w-80 h-80 bg-teal-200/30 rounded-full blur-3xl translate-y-1/2 -translate-x-1/3"></div>
+  <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 relative">
+    <div class="flex flex-col lg:flex-row items-center gap-12">
+      <div class="flex-1 text-center lg:text-left">
+        <div class="inline-flex items-center gap-2 bg-blue-100 text-blue-700 text-xs font-semibold px-3 py-1.5 rounded-full mb-6 uppercase tracking-wide">
+          <span class="w-2 h-2 rounded-full bg-blue-500 animate-pulse"></span>
+          Microservices Architecture · Esprit University
+        </div>
+        <h1 class="text-4xl sm:text-5xl lg:text-6xl font-extrabold text-gray-900 leading-tight tracking-tight mb-6">
+          Smart Healthcare<br>
+          <span class="bg-gradient-to-r from-blue-600 to-teal-500 bg-clip-text text-transparent">Management</span>
+        </h1>
+        <p class="text-lg text-gray-500 max-w-xl mx-auto lg:mx-0 mb-8 leading-relaxed">
+          A unified platform connecting patients, doctors, pharmacy, laboratory, and billing — all powered by independent microservices.
+        </p>
+        <div class="flex flex-col sm:flex-row gap-4 justify-center lg:justify-start">
+          <a routerLink="/login" class="px-7 py-3.5 bg-blue-600 hover:bg-blue-700 text-white font-semibold rounded-xl shadow-lg shadow-blue-200 hover:shadow-xl transition-all duration-200 text-sm text-center cursor-pointer">
+            Explore Dashboard
+          </a>
+          <button class="px-7 py-3.5 border border-gray-300 hover:border-blue-400 text-gray-700 hover:text-blue-600 font-semibold rounded-xl transition-all duration-200 text-sm bg-white hover:bg-blue-50">
+            View Services
+          </button>
+        </div>
+      </div>
+      <div class="flex-1 w-full max-w-md lg:max-w-none">
+        <div class="bg-white rounded-2xl shadow-2xl shadow-gray-200/60 border border-gray-100 overflow-hidden">
+          <div class="flex items-center justify-between px-5 py-4 border-b border-gray-100">
+            <div class="flex items-center gap-2">
+              <div class="w-3 h-3 rounded-full bg-red-400"></div>
+              <div class="w-3 h-3 rounded-full bg-yellow-400"></div>
+              <div class="w-3 h-3 rounded-full bg-green-400"></div>
+            </div>
+            <span class="text-xs text-gray-400 font-mono">clinic-flow · dashboard</span>
+            <div class="w-16"></div>
+          </div>
+          <div class="p-5 bg-gray-50">
+            <div class="grid grid-cols-2 gap-3 mb-4">
+              <div class="bg-white rounded-xl p-3 border border-gray-100 shadow-sm">
+                <p class="text-xs text-gray-400 mb-1">Patients Today</p>
+                <p class="text-2xl font-bold text-gray-800">48</p>
+                <p class="text-xs text-green-500 font-medium mt-1">↑ 12% vs yesterday</p>
+              </div>
+              <div class="bg-white rounded-xl p-3 border border-gray-100 shadow-sm">
+                <p class="text-xs text-gray-400 mb-1">Appointments</p>
+                <p class="text-2xl font-bold text-gray-800">23</p>
+                <p class="text-xs text-blue-500 font-medium mt-1">6 pending</p>
+              </div>
+            </div>
+            <div class="bg-white rounded-xl border border-gray-100 shadow-sm overflow-hidden">
+              <div class="px-4 py-2.5 border-b border-gray-50 flex items-center justify-between">
+                <span class="text-xs font-semibold text-gray-600">Recent Patients</span>
+                <span class="text-xs text-blue-500 font-medium cursor-pointer hover:underline">View all</span>
+              </div>
+              <ul>
+                <li *ngFor="let p of [
+                  { name: 'Ahmed Ben Salem', status: 'Consulted', color: 'text-green-700' },
+                  { name: 'Fatma Trabelsi', status: 'Pending', color: 'text-yellow-700' },
+                  { name: 'Mohamed Karray', status: 'Lab Test', color: 'text-blue-700' }
+                ]" class="flex items-center justify-between px-4 py-2.5 border-b border-gray-50 last:border-0 hover:bg-gray-50 transition">
+                  <div class="flex items-center gap-3">
+                    <div class="w-7 h-7 rounded-full bg-gradient-to-br from-blue-400 to-teal-400 flex items-center justify-center text-white text-xs font-bold">
+                      {{ p.name.charAt(0) }}
+                    </div>
+                    <span class="text-xs font-medium text-gray-700">{{ p.name }}</span>
+                  </div>
+                  <span [class]="'text-xs px-2 py-0.5 rounded-full font-medium ' + p.color">{{ p.status }}</span>
+                </li>
+              </ul>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ===== STATS ===== -->
+<section class="py-12 bg-white border-y border-gray-100">
+  <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+    <div class="grid grid-cols-2 md:grid-cols-4 gap-6">
+      <div *ngFor="let stat of stats" class="flex items-center gap-4 p-4 rounded-2xl bg-gray-50 border border-gray-100 hover:shadow-md transition-shadow">
+        <div [class]="'w-12 h-12 rounded-xl flex items-center justify-center flex-shrink-0 ' + stat.color">
+          <svg class="w-6 h-6" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" [attr.d]="stat.icon"/>
+          </svg>
+        </div>
+        <div>
+          <p class="text-2xl font-extrabold text-gray-900 leading-tight">{{ stat.value }}</p>
+          <p class="text-xs text-gray-500 font-medium">{{ stat.label }}</p>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ===== SERVICES ===== -->
+<section class="py-20 bg-gradient-to-b from-white to-slate-50">
+  <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+    <div class="text-center mb-14">
+      <span class="inline-block text-xs font-bold text-blue-600 bg-blue-50 px-3 py-1 rounded-full uppercase tracking-wider mb-3">Microservices</span>
+      <h2 class="text-3xl sm:text-4xl font-extrabold text-gray-900 mb-4">All-in-One Clinical Platform</h2>
+      <p class="text-gray-500 max-w-2xl mx-auto text-base leading-relaxed">
+        Each service is independently deployed and scalable, communicating through a central API Gateway on port 8080.
+      </p>
+    </div>
+    <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
+      <div *ngFor="let service of services"
+           class="group bg-white rounded-2xl border border-gray-100 shadow-sm hover:shadow-xl hover:-translate-y-1 transition-all duration-200 overflow-hidden cursor-pointer">
+        <div [class]="'h-1.5 bg-gradient-to-r ' + service.color"></div>
+        <div class="p-6">
+          <div class="flex items-start justify-between mb-4">
+            <div [class]="'w-12 h-12 rounded-xl bg-gradient-to-br ' + service.color + ' flex items-center justify-center shadow-md group-hover:scale-110 transition-transform duration-200'">
+              <svg class="w-6 h-6 text-white" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" [attr.d]="service.icon"/>
+              </svg>
+            </div>
+            <span class="text-xs font-semibold text-gray-400 bg-gray-100 px-2.5 py-1 rounded-full">{{ service.badge }}</span>
+          </div>
+          <h3 class="text-base font-bold text-gray-900 mb-2">{{ service.title }}</h3>
+          <p class="text-sm text-gray-500 leading-relaxed mb-5">{{ service.description }}</p>
+          <div class="flex items-center gap-1 text-sm font-semibold text-blue-600 group-hover:gap-2 transition-all">
+            <span>Open Module</span>
+            <svg class="w-4 h-4 transition-transform group-hover:translate-x-1" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" d="M13 7l5 5m0 0l-5 5m5-5H6"/>
+            </svg>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ===== BANNER ===== -->
+<section class="py-14 bg-gradient-to-r from-blue-700 via-blue-600 to-teal-600 relative overflow-hidden">
+  <div class="absolute inset-0 opacity-10" style="background-image:radial-gradient(circle at 1px 1px,white 1px,transparent 0);background-size:32px 32px"></div>
+  <div class="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 relative text-center">
+    <h2 class="text-2xl sm:text-3xl font-extrabold text-white mb-4">Built on Spring Boot Microservices</h2>
+    <p class="text-blue-100 text-base max-w-2xl mx-auto mb-8 leading-relaxed">
+      Eureka Service Discovery · Config Server · API Gateway · Dockerized deployment · Per-service databases
+    </p>
+    <div class="flex flex-wrap justify-center gap-3 text-sm">
+      <span *ngFor="let tech of ['Spring Boot','Eureka','API Gateway :8080','Docker','Angular 17','Tailwind CSS']"
+            class="px-4 py-1.5 bg-white/15 backdrop-blur text-white rounded-full font-medium border border-white/20 hover:bg-white/25 transition-colors cursor-default">
+        {{ tech }}
+      </span>
+    </div>
+  </div>
+</section>
+
+<!-- ===== FOOTER ===== -->
+<footer class="bg-gray-900 text-gray-400 py-10">
+  <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+    <div class="flex flex-col md:flex-row items-center justify-between gap-4">
+      <div class="flex items-center gap-3">
+        <div class="w-8 h-8 rounded-lg bg-gradient-to-br from-blue-500 to-teal-500 flex items-center justify-center">
+          <svg class="w-4 h-4 text-white" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" d="M4.5 12.75l7.5-7.5 7.5 7.5M4.5 19.5l7.5-7.5 7.5 7.5"/>
+          </svg>
+        </div>
+        <span class="text-white font-bold text-lg">Clinic<span class="text-blue-400">Flow</span></span>
+      </div>
+      <p class="text-sm text-center">© {{ currentYear }} ClinicFlow · Esprit University Microservices Project</p>
+      <div class="flex gap-5 text-sm">
+        <a href="#" class="hover:text-white transition-colors">Docs</a>
+        <a href="#" class="hover:text-white transition-colors">API</a>
+        <a href="#" class="hover:text-white transition-colors">GitHub</a>
+      </div>
+    </div>
+  </div>
+</footer>
