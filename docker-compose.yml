@@ -189,9 +189,8 @@ services:
 
   mspatientmedcin:
     build:
-      <<: *spring-build
-      args:
-        MODULE_DIR: MSPatientMedcin
+      context: ./MSPatientMedcin
+      dockerfile: Dockerfile
     container_name: clinicflow-mspatientmedcin
     hostname: mspatientmedcin
     ports:
@@ -215,9 +214,8 @@ services:
 
   msuser:
     build:
-      <<: *spring-build
-      args:
-        MODULE_DIR: MSUser
+      context: ./MSUser
+      dockerfile: Dockerfile
     container_name: clinicflow-msuser
     hostname: msuser
     ports:
