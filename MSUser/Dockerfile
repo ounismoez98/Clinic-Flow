@@ -5,7 +5,8 @@ WORKDIR /build
 COPY .mvn .mvn
 COPY mvnw mvnw.cmd pom.xml ./
 COPY src ./src
-RUN sed -i 's/\r$//' mvnw && chmod +x mvnw \
+RUN --mount=type=cache,target=/root/.m2/repository \
+    sed -i 's/\r$//' mvnw && chmod +x mvnw \
     && ./mvnw -q -DskipTests package -B \
        -Dmaven.wagon.http.retryHandler.count=5 \
        -Dmaven.wagon.httpconnectionManager.ttlSeconds=120

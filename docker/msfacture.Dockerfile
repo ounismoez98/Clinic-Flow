@@ -7,7 +7,8 @@ WORKDIR /build
 COPY ${MODULE_DIR}/mvnw ${MODULE_DIR}/mvnw.cmd ${MODULE_DIR}/pom.xml ./
 COPY ${MODULE_DIR}/.mvn ./.mvn
 COPY ${MODULE_DIR}/src ./src
-RUN sed -i '\r$//' mvnw && \
+RUN --mount=type=cache,target=/root/.m2/repository \
+    sed -i '\r$//' mvnw && \
     chmod +x mvnw && \
     ./mvnw -q -DskipTests package && \
     cp target/*.jar /build/app.jar

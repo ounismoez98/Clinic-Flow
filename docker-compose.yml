@@ -48,7 +48,7 @@ services:
     image: mysql:8.0
     container_name: clinicflow-mysql
     ports:
-      - "3306:3306"
+      - "3307:3306"
     environment:
       MYSQL_ROOT_PASSWORD: root
       MYSQL_DATABASE: clinic_pharmacie
@@ -165,7 +165,7 @@ services:
     container_name: clinicflow-msfacture
     hostname: msfacture
     ports:
-      - "8087:8084"
+      - "8087:8087"
     environment:
       <<: *spring-env
       EUREKA_INSTANCE_HOSTNAME: msfacture
@@ -261,11 +261,23 @@ services:
       msuser:
         condition: service_healthy
     healthcheck:
-      test: ["CMD", "curl", "-f", "http://localhost:8085/"]
+      test: ["CMD", "curl", "http://localhost:8085/"]
       interval: 15s
       timeout: 5s
       retries: 12
       start_period: 90s
+
+  frontend:
+    build:
+      context: ./clinic-flow-frontend
+      dockerfile: Dockerfile
+    container_name: clinicflow-frontend
+    hostname: frontend
+    ports:
+      - "4200:80"
+    depends_on:
+      api-gateway:
+        condition: service_healthy
 
 volumes:
   clinicflow_mysql_data:

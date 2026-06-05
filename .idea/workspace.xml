@@ -6,8 +6,17 @@
   <component name="ChangeListManager">
     <list default="true" id="ef4e5244-133e-46c2-8994-c6ee36e8d9bf" name="Changes" comment="">
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/demoApiGateway/src/main/java/com/example/demoapigateway/DemoApiGatewayApplication.java" beforeDir="false" afterPath="$PROJECT_DIR$/demoApiGateway/src/main/java/com/example/demoapigateway/DemoApiGatewayApplication.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/MSPatientMedcin/Dockerfile" beforeDir="false" afterPath="$PROJECT_DIR$/MSPatientMedcin/Dockerfile" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/MSUser/Dockerfile" beforeDir="false" afterPath="$PROJECT_DIR$/MSUser/Dockerfile" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/clinic-flow-frontend/src/app/app.config.ts" beforeDir="false" afterPath="$PROJECT_DIR$/clinic-flow-frontend/src/app/app.config.ts" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/clinic-flow-frontend/src/app/app.routes.ts" beforeDir="false" afterPath="$PROJECT_DIR$/clinic-flow-frontend/src/app/app.routes.ts" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/clinic-flow-frontend/src/app/layout/shell/shell.component.ts" beforeDir="false" afterPath="$PROJECT_DIR$/clinic-flow-frontend/src/app/layout/shell/shell.component.ts" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/clinic-flow-frontend/src/app/pages/home/home.component.html" beforeDir="false" afterPath="$PROJECT_DIR$/clinic-flow-frontend/src/app/pages/home/home.component.html" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/clinic-flow-frontend/src/app/pages/home/home.component.ts" beforeDir="false" afterPath="$PROJECT_DIR$/clinic-flow-frontend/src/app/pages/home/home.component.ts" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/demoApiGateway/src/main/resources/application.properties" beforeDir="false" afterPath="$PROJECT_DIR$/demoApiGateway/src/main/resources/application.properties" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/docker-compose.yml" beforeDir="false" afterPath="$PROJECT_DIR$/docker-compose.yml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/docker/Dockerfile" beforeDir="false" afterPath="$PROJECT_DIR$/docker/Dockerfile" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/docker/msfacture.Dockerfile" beforeDir="false" afterPath="$PROJECT_DIR$/docker/msfacture.Dockerfile" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -17,25 +26,25 @@
   <component name="Git.Settings">
     <option name="RECENT_GIT_ROOT_PATH" value="$PROJECT_DIR$" />
   </component>
-  <component name="GitHubPullRequestSearchHistory"><![CDATA[{
-  "lastFilter": {
-    "state": "OPEN",
-    "assignee": "mehdi-maamouri"
+  <component name="GitHubPullRequestSearchHistory">{
+  &quot;lastFilter&quot;: {
+    &quot;state&quot;: &quot;OPEN&quot;,
+    &quot;assignee&quot;: &quot;mehdi-maamouri&quot;
   }
-}]]></component>
-  <component name="GithubPullRequestsUISettings"><![CDATA[{
-  "selectedUrlAndAccountId": {
-    "url": "https://github.com/ounismoez98/Clinic-Flow.git",
-    "accountId": "6a019ceb-8d65-401c-a465-0f4a0743a17e"
+}</component>
+  <component name="GithubPullRequestsUISettings">{
+  &quot;selectedUrlAndAccountId&quot;: {
+    &quot;url&quot;: &quot;https://github.com/ounismoez98/Clinic-Flow.git&quot;,
+    &quot;accountId&quot;: &quot;6a019ceb-8d65-401c-a465-0f4a0743a17e&quot;
   }
-}]]></component>
-  <component name="KubernetesApiPersistence"><![CDATA[{}]]></component>
-  <component name="KubernetesApiProvider"><![CDATA[{
-  "isMigrated": true
-}]]></component>
-  <component name="ProjectColorInfo"><![CDATA[{
-  "associatedIndex": 8
-}]]></component>
+}</component>
+  <component name="KubernetesApiPersistence">{}</component>
+  <component name="KubernetesApiProvider">{
+  &quot;isMigrated&quot;: true
+}</component>
+  <component name="ProjectColorInfo">{
+  &quot;associatedIndex&quot;: 8
+}</component>
   <component name="ProjectId" id="3Eb2wKZXSXnKX8QoLvri0hwuIUF" />
   <component name="ProjectViewState">
     <option name="hideEmptyMiddlePackages" value="true" />
@@ -43,6 +52,7 @@
   </component>
   <component name="PropertiesComponent"><![CDATA[{
   "keyToString": {
+    "Docker.docker-compose.yml.frontend: Compose Deployment.executor": "Run",
     "Docker.docker-compose.yml: Compose Deployment.executor": "Run",
     "ModuleVcsDetector.initialDetectionPerformed": "true",
     "RunOnceActivity.ShowReadmeOnStart": "true",
@@ -62,6 +72,7 @@
     "run.configurations.included.in.services": "true",
     "settings.editor.selected.configurable": "preferences.pluginManager",
     "to.speed.mode.migration.done": "true",
+    "ts.external.directory.path": "C:\\Program Files\\JetBrains\\IntelliJ IDEA 2025.2.3\\plugins\\javascript-plugin\\jsLanguageServicesImpl\\external",
     "vue.rearranger.settings.migration": "true"
   }
 }]]></component>
@@ -75,7 +86,7 @@
       </set>
     </option>
   </component>
-  <component name="RunManager" selected="Docker.docker-compose.yml: Compose Deployment">
+  <component name="RunManager" selected="Docker.docker-compose.yml.frontend: Compose Deployment">
     <configuration name="DemoApiGatewayApplication" type="SpringBootApplicationConfigurationType" factoryName="Spring Boot" nameIsGenerated="true">
       <module name="demoApiGateway" />
       <option name="SPRING_BOOT_MAIN_CLASS" value="com.example.demoapigateway.DemoApiGatewayApplication" />
@@ -146,6 +157,10 @@
         <option name="Make" enabled="true" />
       </method>
     </configuration>
+    <configuration default="true" type="docker-deploy" factoryName="docker-compose.yml" temporary="true">
+      <deployment type="docker-compose.yml" />
+      <method v="2" />
+    </configuration>
     <configuration name="docker-compose.yml: Compose Deployment" type="docker-deploy" factoryName="docker-compose.yml" temporary="true" server-name="Docker">
       <deployment type="docker-compose.yml">
         <settings>
@@ -154,8 +169,22 @@
       </deployment>
       <method v="2" />
     </configuration>
+    <configuration name="docker-compose.yml.frontend: Compose Deployment" type="docker-deploy" factoryName="docker-compose.yml" temporary="true" server-name="Docker">
+      <deployment type="docker-compose.yml">
+        <settings>
+          <option name="services">
+            <list>
+              <option value="frontend" />
+            </list>
+          </option>
+          <option name="sourceFilePath" value="docker-compose.yml" />
+        </settings>
+      </deployment>
+      <method v="2" />
+    </configuration>
     <recent_temporary>
       <list>
+        <item itemvalue="Docker.docker-compose.yml.frontend: Compose Deployment" />
         <item itemvalue="Docker.docker-compose.yml: Compose Deployment" />
       </list>
     </recent_temporary>
@@ -176,6 +205,7 @@
       <option name="presentableId" value="Default" />
       <updated>1780433185979</updated>
       <workItem from="1780433187398" duration="16666000" />
+      <workItem from="1780598205874" duration="16650000" />
     </task>
     <servers />
   </component>
