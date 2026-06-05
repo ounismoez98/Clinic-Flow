@@ -157,7 +157,7 @@ services:
       retries: 12
       start_period: 120s
 
-  mspatientmedcin:
+  msfacture:
     build:
       <<: *spring-build
       args:
@@ -189,8 +189,8 @@ services:
 
   mspatientmedcin:
     build:
-      context: ./MSPatientMedcin
-      dockerfile: Dockerfile
+      <<: *spring-build
+      args:
         MODULE_DIR: MSPatientMedcin
     container_name: clinicflow-mspatientmedcin
     hostname: mspatientmedcin
