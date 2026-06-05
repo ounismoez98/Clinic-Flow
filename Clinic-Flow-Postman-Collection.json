@@ -11,7 +11,7 @@
     { "key": "user_url", "value": "http://localhost:8083", "type": "string" },
     { "key": "laboratoir_url", "value": "http://localhost:8081", "type": "string" },
     { "key": "ordonnance_url", "value": "http://localhost:8081", "type": "string" },
-    { "key": "rendezvous_url", "value": "http://localhost:8081", "type": "string" }
+    { "key": "rendezvous_url", "value": "http://localhost:8088", "type": "string" }
   ],
   "item": [
     {
