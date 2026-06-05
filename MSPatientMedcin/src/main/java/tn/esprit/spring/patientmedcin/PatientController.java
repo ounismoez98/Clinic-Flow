@@ -93,10 +93,4 @@ public class PatientController {
         return ResponseEntity.ok(patients);
     }
 
-    @GetMapping("/{id}")
-    public ResponseEntity<Patient> getById(@PathVariable int id) {
-        return patientService.getById(id)
-                .map(ResponseEntity::ok)
-                .orElseGet(() -> ResponseEntity.notFound().build());
-    }
 }

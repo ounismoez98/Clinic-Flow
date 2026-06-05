@@ -18,12 +18,7 @@ public class RabbitMqPharmacyProducerConfig {
 	}
 
 	@Bean
-	public RabbitTemplateCustomizer ordonnancePharmacyJacksonCustomizer(Jackson2JsonMessageConverter jackson2JsonMessageConverter) {
-		return template -> template.setMessageConverter(jackson2JsonMessageConverter);
-	}
-
-	@Bean
-	public Jackson2JsonMessageConverter ordonnanceJackson2JsonMessageConverter() {
-		return new Jackson2JsonMessageConverter();
+	public RabbitTemplateCustomizer ordonnancePharmacyJacksonCustomizer(org.springframework.amqp.support.converter.MessageConverter messageConverter) {
+		return template -> template.setMessageConverter(messageConverter);
 	}
 }

@@ -62,11 +62,6 @@ public class PatientService implements IPatientService {
                 prenom != null ? prenom.trim() : "");
     }
 
-    @Override
-    @Transactional
-    public Patient create(Patient patient) {
-        return patientRepository.save(patient);
-    }
 
 	@Override
 	@Transactional
