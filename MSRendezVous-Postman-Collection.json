@@ -1,0 +1,222 @@
+{
+  "info": {
+    "_postman_id": "ms-rendezvous-collection-v1",
+    "name": "MSRendezVous Microservice",
+    "description": "Dedicated Postman collection for testing the MSRendezVous (Appointment) microservice, both directly and via the API Gateway.",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "variable": [
+    { "key": "rendezvous_url", "value": "http://localhost:8088", "type": "string" },
+    { "key": "gateway_url", "value": "http://localhost:8085", "type": "string" }
+  ],
+  "item": [
+    {
+      "name": "Direct Service Calls (Port 8088)",
+      "description": "Requests sent directly to the MSRendezVous microservice running on host port 8088.",
+      "item": [
+        {
+          "name": "Hello RendezVous",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{rendezvous_url}}/rendezvous/hello",
+              "host": ["{{rendezvous_url}}"],
+              "path": ["rendezvous", "hello"]
+            },
+            "description": "Health-check / welcome endpoint."
+          },
+          "response": []
+        },
+        {
+          "name": "Get All RendezVous",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{rendezvous_url}}/rendezvous/getall",
+              "host": ["{{rendezvous_url}}"],
+              "path": ["rendezvous", "getall"]
+            },
+            "description": "Returns a list of all appointments."
+          },
+          "response": []
+        },
+        {
+          "name": "Get RendezVous By ID",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{rendezvous_url}}/rendezvous/rendezvousbyid/1",
+              "host": ["{{rendezvous_url}}"],
+              "path": ["rendezvous", "rendezvousbyid", "1"]
+            },
+            "description": "Retrieves a single appointment by its ID. Replace '1' with the target ID."
+          },
+          "response": []
+        },
+        {
+          "name": "Create RendezVous",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"date\": \"2026-06-15\",\n  \"cause\": \"Consultation de routine\",\n  \"patient\": \"Yassine Ben Ali\",\n  \"medcin\": \"Dr. Sami Trabelsi\"\n}",
+              "options": { "raw": { "language": "json" } }
+            },
+            "url": {
+              "raw": "{{rendezvous_url}}/rendezvous/addrendezvous",
+              "host": ["{{rendezvous_url}}"],
+              "path": ["rendezvous", "addrendezvous"]
+            },
+            "description": "Creates a new appointment. Returns HTTP 201."
+          },
+          "response": []
+        },
+        {
+          "name": "Update RendezVous",
+          "request": {
+            "method": "PUT",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"date\": \"2026-06-20\",\n  \"cause\": \"Consultation urgente\",\n  \"patient\": \"Yassine Ben Ali\",\n  \"medcin\": \"Dr. Sami Trabelsi\"\n}",
+              "options": { "raw": { "language": "json" } }
+            },
+            "url": {
+              "raw": "{{rendezvous_url}}/rendezvous/updaterendezvous/1",
+              "host": ["{{rendezvous_url}}"],
+              "path": ["rendezvous", "updaterendezvous", "1"]
+            },
+            "description": "Updates an existing appointment by ID. Replace '1' with the target ID."
+          },
+          "response": []
+        },
+        {
+          "name": "Delete RendezVous",
+          "request": {
+            "method": "DELETE",
+            "header": [],
+            "url": {
+              "raw": "{{rendezvous_url}}/rendezvous/deleterendezvous/1",
+              "host": ["{{rendezvous_url}}"],
+              "path": ["rendezvous", "deleterendezvous", "1"]
+            },
+            "description": "Deletes an appointment by ID. Returns HTTP 200."
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "Via API Gateway (Port 8085)",
+      "description": "Requests routed through the Clinic-Flow API Gateway on host port 8085.",
+      "item": [
+        {
+          "name": "[Gateway] Hello RendezVous",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{gateway_url}}/rendezvous/hello",
+              "host": ["{{gateway_url}}"],
+              "path": ["rendezvous", "hello"]
+            },
+            "description": "Health-check endpoint through Gateway."
+          },
+          "response": []
+        },
+        {
+          "name": "[Gateway] Get All RendezVous",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{gateway_url}}/rendezvous/getall",
+              "host": ["{{gateway_url}}"],
+              "path": ["rendezvous", "getall"]
+            },
+            "description": "Returns a list of all appointments through Gateway."
+          },
+          "response": []
+        },
+        {
+          "name": "[Gateway] Get RendezVous By ID",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{gateway_url}}/rendezvous/rendezvousbyid/1",
+              "host": ["{{gateway_url}}"],
+              "path": ["rendezvous", "rendezvousbyid", "1"]
+            },
+            "description": "Retrieves a single appointment by its ID through Gateway. Replace '1' with the target ID."
+          },
+          "response": []
+        },
+        {
+          "name": "[Gateway] Create RendezVous",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"date\": \"2026-06-15\",\n  \"cause\": \"Consultation de routine\",\n  \"patient\": \"Yassine Ben Ali\",\n  \"medcin\": \"Dr. Sami Trabelsi\"\n}",
+              "options": { "raw": { "language": "json" } }
+            },
+            "url": {
+              "raw": "{{gateway_url}}/rendezvous/addrendezvous",
+              "host": ["{{gateway_url}}"],
+              "path": ["rendezvous", "addrendezvous"]
+            },
+            "description": "Creates a new appointment through Gateway. Returns HTTP 201."
+          },
+          "response": []
+        },
+        {
+          "name": "[Gateway] Update RendezVous",
+          "request": {
+            "method": "PUT",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"date\": \"2026-06-20\",\n  \"cause\": \"Consultation urgente\",\n  \"patient\": \"Yassine Ben Ali\",\n  \"medcin\": \"Dr. Sami Trabelsi\"\n}",
+              "options": { "raw": { "language": "json" } }
+            },
+            "url": {
+              "raw": "{{gateway_url}}/rendezvous/updaterendezvous/1",
+              "host": ["{{gateway_url}}"],
+              "path": ["rendezvous", "updaterendezvous", "1"]
+            },
+            "description": "Updates an existing appointment by ID through Gateway. Replace '1' with the target ID."
+          },
+          "response": []
+        },
+        {
+          "name": "[Gateway] Delete RendezVous",
+          "request": {
+            "method": "DELETE",
+            "header": [],
+            "url": {
+              "raw": "{{gateway_url}}/rendezvous/deleterendezvous/1",
+              "host": ["{{gateway_url}}"],
+              "path": ["rendezvous", "deleterendezvous", "1"]
+            },
+            "description": "Deletes an appointment by ID through Gateway. Returns HTTP 200."
+          },
+          "response": []
+        }
+      ]
+    }
+  ]
+}
