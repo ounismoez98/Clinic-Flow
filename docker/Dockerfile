@@ -10,6 +10,8 @@ COPY ${MODULE_DIR}/src ./src
 RUN sed -i 's/\r$//' mvnw \
     && chmod +x mvnw \
     && ./mvnw -q -DskipTests package \
+       -Dmaven.wagon.http.retryHandler.count=5 \
+       -Dmaven.wagon.httpconnectionManager.ttlSeconds=120 \
     && cp target/*.jar /build/app.jar
 
 FROM eclipse-temurin:17-jre-jammy
