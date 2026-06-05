@@ -50,6 +50,10 @@ public class PatientService implements IPatientService {
 		}
 		return saved;
 	}
+    @Override
+    public Optional<Patient> getById(int id) {
+        return patientRepository.findById(id);
+    }
 
     @Override
     public List<Patient> searchByNomAndPrenom(String nom, String prenom) {
@@ -57,6 +61,7 @@ public class PatientService implements IPatientService {
                 nom != null ? nom.trim() : "",
                 prenom != null ? prenom.trim() : "");
     }
+
 
 	@Override
 	@Transactional

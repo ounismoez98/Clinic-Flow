@@ -10,7 +10,7 @@ management:
   endpoints:
     web:
       exposure:
-        include: health,refresh
+        include: refresh,health
 
 gemini:
   base-url: https://generativelanguage.googleapis.com

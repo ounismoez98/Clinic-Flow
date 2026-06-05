@@ -1,5 +1,5 @@
-# Dockerfile for MSFacture service
-# Builds the MSFacture Spring Boot module and creates a lightweight runtime image.
+# Dockerfile for MSRendezVous service
+# Builds the MSRendezVous Spring Boot module and creates a lightweight runtime image.
 
 FROM eclipse-temurin:17-jdk-jammy AS build
 ARG MODULE_DIR=MSRendezVous

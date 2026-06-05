@@ -4,6 +4,17 @@
     <option name="autoReloadType" value="SELECTIVE" />
   </component>
   <component name="ChangeListManager">
+    <list default="true" id="ef4e5244-133e-46c2-8994-c6ee36e8d9bf" name="Changes" comment="chore: add MCP configuration file for MSRendezVous">
+      <change afterPath="$PROJECT_DIR$/MSOrdonnance/src/test/resources/application.properties" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/MSRendezVous-Postman-Collection.json" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/docker/msrendezvous.Dockerfile" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/Clinic-Flow-Postman-Collection.json" beforeDir="false" afterPath="$PROJECT_DIR$/Clinic-Flow-Postman-Collection.json" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/MSOrdonnance/pom.xml" beforeDir="false" afterPath="$PROJECT_DIR$/MSOrdonnance/pom.xml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/MSOrdonnance/src/main/resources/application.properties" beforeDir="false" afterPath="$PROJECT_DIR$/MSOrdonnance/src/main/resources/application.properties" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/MSRendezVous/src/main/java/com/example/mscandidat/MsRendezVousApplication.java" beforeDir="false" afterPath="$PROJECT_DIR$/MSRendezVous/src/main/java/com/example/mscandidat/MsRendezVousApplication.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/MSRendezVous/src/main/resources/application.properties" beforeDir="false" afterPath="$PROJECT_DIR$/MSRendezVous/src/main/resources/application.properties" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/demoApiGateway/pom.xml" beforeDir="false" afterPath="$PROJECT_DIR$/demoApiGateway/pom.xml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/docker-compose.yml" beforeDir="false" afterPath="$PROJECT_DIR$/docker-compose.yml" afterDir="false" />
     <list default="true" id="ef4e5244-133e-46c2-8994-c6ee36e8d9bf" name="Changes" comment="">
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
     </list>
@@ -31,6 +42,14 @@
   <component name="KubernetesApiProvider">{
   &quot;isMigrated&quot;: true
 }</component>
+  <component name="ProjectColorInfo">{
+  &quot;associatedIndex&quot;: 8
+}</component>
+}</component>
+  <component name="McpProjectServerCommands">
+    <commands />
+    <urls />
+  </component>
   <component name="ProjectColorInfo">{
   &quot;associatedIndex&quot;: 8
 }</component>
@@ -63,6 +82,27 @@
     &quot;to.speed.mode.migration.done&quot;: &quot;true&quot;,
     &quot;ts.external.directory.path&quot;: &quot;C:\\Program Files\\JetBrains\\IntelliJ IDEA 2025.2.3\\plugins\\javascript-plugin\\jsLanguageServicesImpl\\external&quot;,
     &quot;vue.rearranger.settings.migration&quot;: &quot;true&quot;
+  <component name="PropertiesComponent"><![CDATA[{
+  "keyToString": {
+    "ModuleVcsDetector.initialDetectionPerformed": "true",
+    "RunOnceActivity.ShowReadmeOnStart": "true",
+    "RunOnceActivity.TerminalTabsStorage.copyFrom.TerminalArrangementManager.252": "true",
+    "RunOnceActivity.git.unshallow": "true",
+    "Spring Boot.UserApplication.executor": "Run",
+    "com.intellij.ml.llm.matterhorn.ej.ui.settings.DefaultModelSelectionForGA.v1": "true",
+    "git-widget-placeholder": "Merging main",
+    "ignore.virus.scanning.warn.message": "true",
+    "junie.onboarding.icon.badge.shown": "true",
+    "kotlin-language-version-configured": "true",
+    "last_opened_file_path": "C:/Users/Mehdi/Desktop/Clinic-Flow",
+    "node.js.detected.package.eslint": "true",
+    "node.js.detected.package.tslint": "true",
+    "node.js.selected.package.eslint": "(autodetect)",
+    "node.js.selected.package.tslint": "(autodetect)",
+    "nodejs_package_manager_path": "npm",
+    "run.configurations.included.in.services": "true",
+    "to.speed.mode.migration.done": "true",
+    "vue.rearranger.settings.migration": "true"
   }
 }</component>
   <component name="RunDashboard">
@@ -76,6 +116,7 @@
     </option>
   </component>
   <component name="RunManager" selected="Docker.docker-compose.yml.frontend: Compose Deployment">
+
     <configuration name="DemoApiGatewayApplication" type="SpringBootApplicationConfigurationType" factoryName="Spring Boot" nameIsGenerated="true">
       <module name="demoApiGateway" />
       <option name="SPRING_BOOT_MAIN_CLASS" value="com.example.demoapigateway.DemoApiGatewayApplication" />
@@ -195,12 +236,26 @@
       <option name="number" value="Default" />
       <option name="presentableId" value="Default" />
       <updated>1780433185979</updated>
+      <workItem from="1780433187398" duration="2799000" />
+    </task>
+    <task id="LOCAL-00001" summary="chore: add MCP configuration file for MSRendezVous">
+      <option name="closed" value="true" />
+      <created>1780687169812</created>
+      <option name="number" value="00001" />
+      <option name="presentableId" value="LOCAL-00001" />
+      <option name="project" value="LOCAL" />
+      <updated>1780687169812</updated>
       <workItem from="1780433187398" duration="16666000" />
       <workItem from="1780598205874" duration="16650000" />
     </task>
+    <option name="localTasksCounter" value="2" />
     <servers />
   </component>
   <component name="TypeScriptGeneratedFilesManager">
     <option name="version" value="3" />
+  </component>
+  <component name="VcsManagerConfiguration">
+    <MESSAGE value="chore: add MCP configuration file for MSRendezVous" />
+    <option name="LAST_COMMIT_MESSAGE" value="chore: add MCP configuration file for MSRendezVous" />
   </component>
 </project>

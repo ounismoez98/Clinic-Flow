@@ -11,9 +11,10 @@
         <option value="$PROJECT_DIR$/MSLaboratoir/pom.xml" />
         <option value="$PROJECT_DIR$/MSOrdonnance/pom.xml" />
         <option value="$PROJECT_DIR$/MSRendezVous/pom.xml" />
-        <option value="$PROJECT_DIR$/demoApiGateway/pom.xml" />
-        <option value="$PROJECT_DIR$/MSNotification/pom.xml" />
         <option value="$PROJECT_DIR$/MSPatientMedcin/pom.xml" />
+        <option value="$PROJECT_DIR$/MSOrdonnance/pom.xml" />
+        <option value="$PROJECT_DIR$/MSLaboratoir/pom.xml" />
+        <option value="$PROJECT_DIR$/demoApiGateway/pom.xml" />
         <option value="$PROJECT_DIR$/demoConfigServer/pom.xml" />
         <option value="$PROJECT_DIR$/demoEurekaServer/pom.xml" />
         <option value="$PROJECT_DIR$/MSLaboratoir/pom.xml" />
@@ -26,4 +27,5 @@
   <component name="ProjectRootManager" version="2" languageLevel="JDK_17" default="true" project-jdk-name="17" project-jdk-type="JavaSDK">
     <output url="file://$PROJECT_DIR$/out" />
   </component>
+  <component name="ProjectRootManager" version="2" languageLevel="JDK_17" default="true" project-jdk-name="ms-17" project-jdk-type="JavaSDK" />
 </project>

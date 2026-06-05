@@ -5,7 +5,7 @@ import org.springframework.stereotype.Service;
 
 @Service
 public class AnalysisCompletedConsumer {
-	@RabbitListener(queues = AnalysisRabbitMqTopologyConfig.ANALYSIS_COMPLETED_QUEUE)
+	@RabbitListener(queues = RabbitMqConfig.ANALYSIS_COMPLETED_QUEUE)
     public void handleCompleted(AnalysisCompletedMessage message) {
         System.out.println("Received analysis completed: analysisId=" + message.getAnalysisId()
                 + ", ordonnanceId=" + message.getOrdonnanceId()

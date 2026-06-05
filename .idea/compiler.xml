@@ -6,19 +6,20 @@
         <sourceOutputDir name="target/generated-sources/annotations" />
         <sourceTestOutputDir name="target/generated-test-sources/test-annotations" />
         <outputRelativeToContentRoot value="true" />
-        <module name="MSCandidat" />
-        <module name="MSOrdonnance" />
-        <module name="demoConfigServer" />
         <module name="MsFacture" />
         <module name="MSNotification" />
-        <module name="demoApiGateway" />
-        <module name="demoEurekaServer" />
-        <module name="demoConfigServer" />
-        <module name="MSPatientMedcin" />
         <module name="MSUser" />
-        <module name="MSRendezVous" />
       </profile>
     </annotationProcessing>
+    <bytecodeTargetLevel>
+      <module name="demoApiGateway" target="17" />
+      <module name="demoConfigServer" target="17" />
+      <module name="demoEurekaServer" target="17" />
+      <module name="MSCandidat" target="17" />
+      <module name="MSOrdonnance" target="17" />
+      <module name="MSPatientMedcin" target="17" />
+      <module name="MSRendezVous" target="17" />
+    </bytecodeTargetLevel>
   </component>
   <component name="JavacSettings">
     <option name="ADDITIONAL_OPTIONS_OVERRIDE">

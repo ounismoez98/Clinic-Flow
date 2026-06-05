@@ -1,0 +1,41 @@
+version: '3.8'
+
+services:
+  ms-ordonnance:
+    build: .
+    container_name: ms-ordonnance
+    ports:
+      - "8081:8081"
+    environment:
+      - RABBITMQ_HOST=rabbitmq
+      - RABBITMQ_PORT=5672
+      - RABBITMQ_USERNAME=guest
+      - RABBITMQ_PASSWORD=guest
+      - CONFIG_SERVER_URL=http://config-server:8888
+      - EUREKA_URL=http://eureka-server:8761/eureka
+      - DB_URL=jdbc:h2:file:/data/Ordonnance
+    volumes:
+      - ms-ordonnance-data:/data
+    depends_on:
+      - rabbitmq
+    networks:
+      - clinic-flow-network
+
+  rabbitmq:
+    image: rabbitmq:3-management
+    container_name: rabbitmq-ordonnance
+    ports:
+      - "5672:5672"
+      - "15672:15672"
+    environment:
+      - RABBITMQ_DEFAULT_USER=guest
+      - RABBITMQ_DEFAULT_PASS=guest
+    networks:
+      - clinic-flow-network
+
+volumes:
+  ms-ordonnance-data:
+
+networks:
+  clinic-flow-network:
+    driver: bridge

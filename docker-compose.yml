@@ -32,8 +32,8 @@ services:
     image: rabbitmq:3-management
     container_name: clinicflow-rabbitmq
     ports:
-      - "5672:5672"
-      - "15672:15672"
+      - "5673:5672"
+      - "15673:15672"
     environment:
       RABBITMQ_DEFAULT_USER: guest
       RABBITMQ_DEFAULT_PASS: guest
@@ -181,7 +181,7 @@ services:
       config-server:
         condition: service_healthy
     healthcheck:
-      test: ["CMD", "curl", "-f", "http://localhost:8087/actuator/health"]
+      test: ["CMD", "curl", "-f", "http://localhost:8084/actuator/health"]
       interval: 15s
       timeout: 5s
       retries: 12
@@ -189,8 +189,9 @@ services:
 
   mspatientmedcin:
     build:
-      context: ./MSPatientMedcin
-      dockerfile: Dockerfile
+      <<: *spring-build
+      args:
+        MODULE_DIR: MSPatientMedcin
     container_name: clinicflow-mspatientmedcin
     hostname: mspatientmedcin
     ports:
@@ -214,8 +215,9 @@ services:
 
   msuser:
     build:
-      context: ./MSUser
-      dockerfile: Dockerfile
+      <<: *spring-build
+      args:
+        MODULE_DIR: MSUser
     container_name: clinicflow-msuser
     hostname: msuser
     ports:
@@ -260,6 +262,8 @@ services:
         condition: service_healthy
       msuser:
         condition: service_healthy
+      msrendezvous:
+        condition: service_healthy
     healthcheck:
       test: ["CMD", "curl", "http://localhost:8085/"]
       interval: 15s
@@ -279,7 +283,32 @@ services:
       api-gateway:
         condition: service_healthy
 
+  msrendezvous:
+    build:
+      context: .
+      dockerfile: docker/msrendezvous.Dockerfile
+    container_name: clinicflow-msrendezvous
+    hostname: msrendezvous
+    ports:
+      - "8088:8081"
+    environment:
+      EUREKA_CLIENT_SERVICE_URL_DEFAULTZONE: http://eureka:8761/eureka
+      EUREKA_INSTANCE_HOSTNAME: msrendezvous
+      SPRING_DATASOURCE_URL: "jdbc:h2:file:/app/Database/Data/RendezVous;DB_CLOSE_ON_EXIT=FALSE"
+    volumes:
+      - clinicflow_rendezvous_h2:/app/Database/Data
+    depends_on:
+      eureka:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8081/actuator/health"]
+      interval: 15s
+      timeout: 5s
+      retries: 12
+      start_period: 120s
+
 volumes:
   clinicflow_mysql_data:
   clinicflow_patient_h2:
   clinicflow_user_h2:
+  clinicflow_rendezvous_h2:
