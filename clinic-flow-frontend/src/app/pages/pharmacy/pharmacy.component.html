@@ -49,6 +49,64 @@
     </div>
   </div>
 
+  <!-- RabbitMQ demo: MSOrdonnance → queue → MSPharmacie -->
+  <div class="bg-indigo-50 border border-indigo-100 rounded-2xl p-5 shadow-sm space-y-4">
+    <div class="flex items-start gap-3">
+      <div class="w-10 h-10 rounded-xl bg-indigo-100 text-indigo-600 flex items-center justify-center flex-shrink-0">
+        <svg class="w-5 h-5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" d="M7.5 21 3 16.5m0 0L7.5 12M3 16.5h13.5m0-13.5L21 7.5m0 0L16.5 12M21 7.5H7.5"/>
+        </svg>
+      </div>
+      <div>
+        <h2 class="text-sm font-bold text-indigo-900">Démo RabbitMQ — Ordonnance → Pharmacie</h2>
+        <p class="text-xs text-indigo-700/80 mt-1 leading-relaxed">
+          Ajoute un médicament à une ordonnance via <strong>MSOrdonnance</strong> (Gateway).
+          Le service publie sur RabbitMQ ; <strong>MSPharmacie</strong> consomme
+          <code class="text-[11px] bg-indigo-100 px-1 rounded">pharmacy.ordonnance.medicament.queue</code>
+          et décrémente le stock sans appel REST direct depuis cette page.
+        </p>
+      </div>
+    </div>
+
+    <div *ngIf="ordonnancesLoading" class="text-xs text-indigo-600">Chargement des ordonnances…</div>
+    <div *ngIf="ordonnancesError" class="text-xs text-orange-700 bg-orange-50 border border-orange-200 px-3 py-2 rounded-xl">
+      {{ ordonnancesError }}
+    </div>
+
+    <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3 items-end">
+      <div>
+        <label class="block text-xs font-semibold text-indigo-800 mb-1">Ordonnance</label>
+        <select [(ngModel)]="mqOrdonnanceId"
+                [disabled]="ordonnancesLoading || ordonnances.length === 0"
+                class="w-full px-3 py-2.5 text-sm border border-indigo-200 bg-white rounded-xl focus:outline-none focus:ring-2 focus:ring-indigo-500/30 disabled:opacity-50">
+          <option [ngValue]="null">— Sélectionner —</option>
+          <option *ngFor="let o of ordonnances" [ngValue]="o.id">{{ ordonnanceLabel(o) }}</option>
+        </select>
+      </div>
+      <div>
+        <label class="block text-xs font-semibold text-indigo-800 mb-1">Médicament</label>
+        <select [(ngModel)]="mqMedicamentId"
+                [disabled]="medicaments.length === 0"
+                class="w-full px-3 py-2.5 text-sm border border-indigo-200 bg-white rounded-xl focus:outline-none focus:ring-2 focus:ring-indigo-500/30 disabled:opacity-50">
+          <option [ngValue]="null">— Sélectionner —</option>
+          <option *ngFor="let m of medicaments" [ngValue]="m.id">{{ medicamentLabel(m) }}</option>
+        </select>
+      </div>
+      <button (click)="triggerOrdonnanceMq()"
+              [disabled]="mqLoading || ordonnances.length === 0 || medicaments.length === 0"
+              class="flex items-center justify-center gap-2 px-4 py-2.5 bg-indigo-600 hover:bg-indigo-700 text-white text-sm font-semibold rounded-xl transition disabled:opacity-50">
+        <svg *ngIf="mqLoading" class="animate-spin w-4 h-4" fill="none" viewBox="0 0 24 24">
+          <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"/>
+          <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v8z"/>
+        </svg>
+        Ajouter à l'ordonnance (MQ)
+      </button>
+    </div>
+
+    <div *ngIf="mqError" class="text-xs text-red-700 bg-red-50 border border-red-200 px-3 py-2 rounded-xl">{{ mqError }}</div>
+    <div *ngIf="mqInfo" class="text-xs text-indigo-800 bg-white/70 border border-indigo-100 px-3 py-2 rounded-xl leading-relaxed">{{ mqInfo }}</div>
+  </div>
+
   <!-- Error banner -->
   <div *ngIf="error && !showModal" class="flex items-center gap-3 bg-red-50 border border-red-200 text-red-700 text-sm font-medium px-5 py-3 rounded-2xl">
     <svg class="w-4 h-4 flex-shrink-0" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">

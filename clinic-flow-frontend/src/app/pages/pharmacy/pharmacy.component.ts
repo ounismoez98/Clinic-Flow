@@ -5,7 +5,7 @@ import { HttpClient, HttpClientModule, HttpErrorResponse, HttpResponse } from '@
 import { forkJoin, of } from 'rxjs';
 import { catchError } from 'rxjs/operators';
 
-import { LOW_STOCK_THRESHOLD, MEDICAMENTS_API, PATIENTS_API } from '../../core/api.config';
+import { LOW_STOCK_THRESHOLD, MEDICAMENTS_API, ORDONNANCES_API, PATIENTS_API } from '../../core/api.config';
 
 // ─── Models ───────────────────────────────────────────────────────────────────
 
@@ -31,6 +31,14 @@ interface PatientOption {
   nom: string;
   prenom: string;
   email?: string;
+}
+
+interface OrdonnanceOption {
+  id: number;
+  nom: string;
+  prenom: string;
+  email?: string;
+  medicamentsIds?: number[];
 }
 
 interface AssistantSummary {
@@ -97,10 +105,20 @@ export class PharmacyComponent implements OnInit {
   deleteTargetId: number | null = null;
   deleteTargetName = '';
 
+  ordonnances: OrdonnanceOption[] = [];
+  ordonnancesLoading = false;
+  ordonnancesError = '';
+  mqOrdonnanceId: number | null = null;
+  mqMedicamentId: number | null = null;
+  mqLoading = false;
+  mqError = '';
+  mqInfo = '';
+
   constructor(private http: HttpClient) {}
 
   ngOnInit() {
     this.load();
+    this.loadOrdonnances();
   }
 
   // ── Stats ──────────────────────────────────────────────────────────────────
@@ -188,6 +206,77 @@ export class PharmacyComponent implements OnInit {
             prixUnitaire: Number(stock.prixUnitaire ?? 0),
           };
         }
+      }
+    });
+  }
+
+  loadOrdonnances() {
+    this.ordonnancesLoading = true;
+    this.ordonnancesError = '';
+    this.http.get<OrdonnanceOption[]>(ORDONNANCES_API, { observe: 'response' }).subscribe({
+      next: (resp: HttpResponse<OrdonnanceOption[]>) => {
+        this.ordonnances = resp.status === 204 || !resp.body ? [] : resp.body;
+        this.ordonnancesLoading = false;
+        if (this.ordonnances.length === 0) {
+          this.ordonnancesError = 'Aucune ordonnance. Démarrez MSOrdonnance.';
+        } else if (this.mqOrdonnanceId == null) {
+          this.mqOrdonnanceId = this.ordonnances[0].id;
+        }
+      },
+      error: (err: HttpErrorResponse) => {
+        this.ordonnancesError = this.extractError(err, 'Impossible de charger les ordonnances.');
+        this.ordonnancesLoading = false;
+      }
+    });
+  }
+
+  triggerOrdonnanceMq() {
+    if (this.mqOrdonnanceId == null || this.mqMedicamentId == null) {
+      this.mqError = 'Sélectionnez une ordonnance et un médicament.';
+      return;
+    }
+    const medicamentId = this.mqMedicamentId;
+    const stockBefore = this.medicaments.find(m => m.id === medicamentId)?.stockQuantity;
+
+    this.mqLoading = true;
+    this.mqError = '';
+    this.mqInfo = '';
+
+    this.http.post(
+      `${ORDONNANCES_API}/${this.mqOrdonnanceId}/medicaments/${medicamentId}`,
+      {},
+      { responseType: 'text' }
+    ).subscribe({
+      next: (msg: string) => {
+        this.mqLoading = false;
+        this.mqInfo =
+          `${msg.trim()} MSOrdonnance a publié sur RabbitMQ (clinic.pharmacy.exchange → ordonnance.medicament.added). ` +
+          'MSPharmacie consomme la file et décrémente le stock de façon asynchrone.';
+        this.flash('Ordonnance envoyée — mise à jour stock via RabbitMQ…');
+        setTimeout(() => {
+          this.http.get<StockInfo>(`${MEDICAMENTS_API}/${medicamentId}/stock-info`).subscribe({
+            next: stock => {
+              const idx = this.medicaments.findIndex(m => m.id === medicamentId);
+              if (idx >= 0) {
+                this.medicaments[idx] = {
+                  ...this.medicaments[idx],
+                  stockQuantity: stock.stockQuantity,
+                  prixUnitaire: Number(stock.prixUnitaire ?? 0),
+                };
+              }
+              const stockAfter = stock.stockQuantity;
+              if (stockBefore != null && stockAfter < stockBefore) {
+                this.mqInfo += ` Stock : ${stockBefore} → ${stockAfter}.`;
+              } else if (stockBefore != null && stockAfter === stockBefore) {
+                this.mqInfo += ` Stock inchangé (${stockAfter}) — stock insuffisant ou MSPharmacie indisponible.`;
+              }
+            }
+          });
+        }, 800);
+      },
+      error: (err: HttpErrorResponse) => {
+        this.mqLoading = false;
+        this.mqError = this.extractError(err, 'Erreur lors de l\'ajout à l\'ordonnance.');
       }
     });
   }
@@ -467,6 +556,14 @@ export class PharmacyComponent implements OnInit {
 
   patientLabel(p: PatientOption): string {
     return `#${p.id} — ${p.prenom} ${p.nom}`;
+  }
+
+  ordonnanceLabel(o: OrdonnanceOption): string {
+    return `#${o.id} — ${o.prenom} ${o.nom}`;
+  }
+
+  medicamentLabel(m: MedicamentRow): string {
+    return `#${m.id} — ${m.nomMedicament} (stock: ${m.stockQuantity})`;
   }
 
   private extractError(err: HttpErrorResponse, fallback: string): string {
