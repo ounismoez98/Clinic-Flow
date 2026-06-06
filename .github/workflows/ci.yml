@@ -2,9 +2,9 @@ name: Clinic-Flow CI
 
 on:
   push:
-    branches: [ main, master ]
+    branches: [ '**' ]
   pull_request:
-    branches: [ main, master ]
+    branches: [ '**' ]
 
 jobs:
   build-backend:
@@ -37,8 +37,12 @@ jobs:
     - name: Build Service
       run: |
         cd ${{ matrix.service }}
-        chmod +x mvnw || true
-        ./mvnw clean package -DskipTests
+        if [ -f mvnw ]; then
+          chmod +x mvnw
+          ./mvnw clean package -DskipTests
+        else
+          mvn clean package -DskipTests
+        fi
 
   build-frontend:
     runs-on: ubuntu-latest

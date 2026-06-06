@@ -1,6 +1,7 @@
-import { Component } from '@angular/core';
+import { Component, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { RouterLink } from '@angular/router';
+import { RouterLink, Router } from '@angular/router';
+import { KeycloakService } from 'keycloak-angular';
 
 @Component({
   selector: 'app-home',
@@ -9,9 +10,20 @@ import { RouterLink } from '@angular/router';
   templateUrl: './home.component.html',
   styleUrl: './home.component.scss'
 })
-export class HomeComponent {
+export class HomeComponent implements OnInit {
   currentYear = new Date().getFullYear();
   menuOpen = false;
+  isLoggedIn = false;
+
+  constructor(private keycloak: KeycloakService, private router: Router) {}
+
+  async ngOnInit() {
+    try {
+      this.isLoggedIn = await this.keycloak.isLoggedIn();
+    } catch (e) {
+      this.isLoggedIn = false;
+    }
+  }
 
   navLinks = [
     { label: 'Dashboard', route: '/dashboard' },
@@ -39,4 +51,14 @@ export class HomeComponent {
   ];
 
   toggleMenu() { this.menuOpen = !this.menuOpen; }
+
+  handleProtectedClick(route: string) {
+    if (!this.isLoggedIn) {
+      this.router.navigate(['/login']);
+    } else {
+      if (route !== '#') {
+        this.router.navigate([route]);
+      }
+    }
+  }
 }

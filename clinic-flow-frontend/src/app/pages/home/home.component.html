@@ -11,14 +11,14 @@
         <span class="text-xl font-bold text-gray-900 tracking-tight">Clinic<span class="text-blue-600">Flow</span></span>
       </div>
       <nav class="hidden md:flex items-center gap-1">
-        <a *ngFor="let link of navLinks" [routerLink]="link.route"
-           class="px-4 py-2 rounded-lg text-sm font-medium text-gray-600 hover:text-blue-600 hover:bg-blue-50 transition-all duration-150">
+        <a *ngFor="let link of navLinks" (click)="handleProtectedClick(link.route)"
+           class="px-4 py-2 rounded-lg text-sm font-medium text-gray-600 hover:text-blue-600 hover:bg-blue-50 transition-all duration-150 cursor-pointer">
           {{ link.label }}
         </a>
       </nav>
       <div class="hidden md:flex items-center gap-3">
-        <a routerLink="/login" class="px-4 py-2 text-sm font-medium text-gray-600 hover:text-blue-600 transition-colors cursor-pointer">Sign In</a>
-        <a routerLink="/login" class="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white text-sm font-semibold rounded-lg shadow-sm transition-all duration-150 hover:shadow-md cursor-pointer">
+        <a [routerLink]="['/login']" [queryParams]="{mode: 'signin'}" class="px-4 py-2 text-sm font-medium text-gray-600 hover:text-blue-600 transition-colors cursor-pointer">Sign In</a>
+        <a [routerLink]="['/login']" [queryParams]="{mode: 'signup'}" class="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white text-sm font-semibold rounded-lg shadow-sm transition-all duration-150 hover:shadow-md cursor-pointer">
           Get Started
         </a>
       </div>
@@ -31,13 +31,13 @@
     </div>
   </div>
   <div *ngIf="menuOpen" class="md:hidden border-t border-gray-100 bg-white px-4 py-3 space-y-1">
-    <a *ngFor="let link of navLinks" [routerLink]="link.route"
-       class="block px-4 py-2 rounded-lg text-sm font-medium text-gray-700 hover:bg-blue-50 hover:text-blue-600 transition">
+    <a *ngFor="let link of navLinks" (click)="handleProtectedClick(link.route)"
+       class="block px-4 py-2 rounded-lg text-sm font-medium text-gray-700 hover:bg-blue-50 hover:text-blue-600 transition cursor-pointer">
       {{ link.label }}
     </a>
     <div class="pt-2 flex flex-col gap-2">
-      <a routerLink="/login" class="w-full text-center px-4 py-2 text-sm font-medium text-gray-600 border border-gray-200 rounded-lg hover:bg-gray-50 transition">Sign In</a>
-      <a routerLink="/login" class="w-full text-center px-4 py-2 bg-blue-600 text-white text-sm font-semibold rounded-lg hover:bg-blue-700 transition">Get Started</a>
+      <a [routerLink]="['/login']" [queryParams]="{mode: 'signin'}" class="w-full text-center px-4 py-2 text-sm font-medium text-gray-600 border border-gray-200 rounded-lg hover:bg-gray-50 transition cursor-pointer">Sign In</a>
+      <a [routerLink]="['/login']" [queryParams]="{mode: 'signup'}" class="w-full text-center px-4 py-2 bg-blue-600 text-white text-sm font-semibold rounded-lg hover:bg-blue-700 transition cursor-pointer">Get Started</a>
     </div>
   </div>
 </header>
@@ -51,7 +51,7 @@
       <div class="flex-1 text-center lg:text-left">
         <div class="inline-flex items-center gap-2 bg-blue-100 text-blue-700 text-xs font-semibold px-3 py-1.5 rounded-full mb-6 uppercase tracking-wide">
           <span class="w-2 h-2 rounded-full bg-blue-500 animate-pulse"></span>
-          Microservices Architecture · Esprit University
+
         </div>
         <h1 class="text-4xl sm:text-5xl lg:text-6xl font-extrabold text-gray-900 leading-tight tracking-tight mb-6">
           Smart Healthcare<br>
@@ -61,7 +61,7 @@
           A unified platform connecting patients, doctors, pharmacy, laboratory, and billing — all powered by independent microservices.
         </p>
         <div class="flex flex-col sm:flex-row gap-4 justify-center lg:justify-start">
-          <a routerLink="/login" class="px-7 py-3.5 bg-blue-600 hover:bg-blue-700 text-white font-semibold rounded-xl shadow-lg shadow-blue-200 hover:shadow-xl transition-all duration-200 text-sm text-center cursor-pointer">
+          <a (click)="handleProtectedClick('/dashboard')" class="px-7 py-3.5 bg-blue-600 hover:bg-blue-700 text-white font-semibold rounded-xl shadow-lg shadow-blue-200 hover:shadow-xl transition-all duration-200 text-sm text-center cursor-pointer">
             Explore Dashboard
           </a>
           <button class="px-7 py-3.5 border border-gray-300 hover:border-blue-400 text-gray-700 hover:text-blue-600 font-semibold rounded-xl transition-all duration-200 text-sm bg-white hover:bg-blue-50">
@@ -147,11 +147,10 @@
       <span class="inline-block text-xs font-bold text-blue-600 bg-blue-50 px-3 py-1 rounded-full uppercase tracking-wider mb-3">Microservices</span>
       <h2 class="text-3xl sm:text-4xl font-extrabold text-gray-900 mb-4">All-in-One Clinical Platform</h2>
       <p class="text-gray-500 max-w-2xl mx-auto text-base leading-relaxed">
-        Each service is independently deployed and scalable, communicating through a central API Gateway on port 8080.
-      </p>
+          </p>
     </div>
     <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
-      <div *ngFor="let service of services" [routerLink]="service.route"
+      <div *ngFor="let service of services" (click)="handleProtectedClick(service.route)"
            class="group bg-white rounded-2xl border border-gray-100 shadow-sm hover:shadow-xl hover:-translate-y-1 transition-all duration-200 overflow-hidden cursor-pointer">
         <div [class]="'h-1.5 bg-gradient-to-r ' + service.color"></div>
         <div class="p-6">
