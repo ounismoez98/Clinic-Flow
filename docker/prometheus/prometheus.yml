@@ -1,0 +1,52 @@
+global:
+  scrape_interval: 15s
+
+scrape_configs:
+  - job_name: 'prometheus'
+    static_configs:
+      - targets: ['localhost:9090']
+
+  - job_name: 'eureka-server'
+    metrics_path: '/actuator/prometheus'
+    static_configs:
+      - targets: ['eureka:8761']
+
+  - job_name: 'config-server'
+    metrics_path: '/actuator/prometheus'
+    static_configs:
+      - targets: ['config-server:8888']
+
+  - job_name: 'ms-facture'
+    metrics_path: '/actuator/prometheus'
+    static_configs:
+      - targets: ['msfacture:8084']
+
+  - job_name: 'ms-patient-medcin'
+    metrics_path: '/actuator/prometheus'
+    static_configs:
+      - targets: ['mspatientmedcin:8082']
+
+  - job_name: 'ms-user'
+    metrics_path: '/actuator/prometheus'
+    static_configs:
+      - targets: ['msuser:8083']
+
+  - job_name: 'ms-pharmacie'
+    metrics_path: '/actuator/prometheus'
+    static_configs:
+      - targets: ['mspharmacie:8086']
+
+  - job_name: 'ms-ordonnance'
+    metrics_path: '/actuator/prometheus'
+    static_configs:
+      - targets: ['msordonnance:8081']
+
+  - job_name: 'ms-rendezvous'
+    metrics_path: '/actuator/prometheus'
+    static_configs:
+      - targets: ['msrendezvous:8081']
+
+  - job_name: 'api-gateway'
+    metrics_path: '/actuator/prometheus'
+    static_configs:
+      - targets: ['api-gateway:8085']

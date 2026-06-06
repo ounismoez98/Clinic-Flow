@@ -392,6 +392,26 @@ services:
       retries: 12
       start_period: 120s
 
+  prometheus:
+    image: prom/prometheus:latest
+    container_name: clinicflow-prometheus
+    volumes:
+      - ./docker/prometheus/prometheus.yml:/etc/prometheus/prometheus.yml
+    ports:
+      - "9090:9090"
+    depends_on:
+      - api-gateway
+
+  grafana:
+    image: grafana/grafana:latest
+    container_name: clinicflow-grafana
+    ports:
+      - "3000:3000"
+    environment:
+      - GF_SECURITY_ADMIN_PASSWORD=admin
+    depends_on:
+      - prometheus
+
 volumes:
   clinicflow_mysql_data:
   clinicflow_patient_h2:

@@ -58,6 +58,15 @@ public class FactureController {
     }
 
     @GetMapping("/{id}/pdf")
+    public ResponseEntity<byte[]> getPdf(@PathVariable Long id) {
+        byte[] pdf = factureService.generatePdf(id);
+        return ResponseEntity.ok()
+                .header("Content-Disposition", "attachment; filename=facture_" + id + ".pdf")
+                .contentType(MediaType.APPLICATION_PDF)
+                .body(pdf);
+    }
+
+    @GetMapping("/patient/{id}/pdf")
     public ResponseEntity<byte[]> getPdfByPatient(@PathVariable int id) {
         byte[] pdf = factureService.generatePdfByPatient(id);
         return ResponseEntity.ok()
