@@ -1,7 +1,7 @@
 import { Component, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
-import { HttpClient, HttpClientModule } from '@angular/common/http';
+import { HttpClient, HttpClientModule, HttpErrorResponse } from '@angular/common/http';
 
 // ─── Models ───────────────────────────────────────────────────────────────────
 
@@ -61,7 +61,7 @@ export class FacturesComponent implements OnInit {
   // ── Form ───────────────────────────────────────────────────────────────────
   form: Facture = this.emptyForm();
 
-  constructor(private http: HttpClient) {}
+  constructor(private http: HttpClient) { }
 
   ngOnInit() {
     this.load();
@@ -85,8 +85,8 @@ export class FacturesComponent implements OnInit {
   get filtered(): Facture[] {
     return this.factures.filter(f => {
       const matchSearch = String(f.patientId).includes(this.search) ||
-                          String(f.id).includes(this.search) ||
-                          (f.dateFacture ?? '').includes(this.search);
+        String(f.id).includes(this.search) ||
+        (f.dateFacture ?? '').includes(this.search);
       const matchStatut = this.filterStatut === 'ALL' || f.statut === this.filterStatut;
       return matchSearch && matchStatut;
     });
@@ -99,7 +99,7 @@ export class FacturesComponent implements OnInit {
     this.error = '';
     this.http.get<Facture[]>(API).subscribe({
       next: data => { this.factures = data; this.loading = false; },
-      error: () => { this.error = 'Impossible de charger les factures. Vérifiez que MsFacture tourne sur le port 8087.'; this.loading = false; }
+      error: () => { this.error = 'Unable to load invoices. '; this.loading = false; }
     });
   }
 
@@ -111,7 +111,7 @@ export class FacturesComponent implements OnInit {
           this.closeModal();
           this.flash('Facture créée avec succès !');
         },
-        error: () => this.error = 'Erreur lors de la création.'
+        error: (err) => { this.error = err.error?.message || 'Error creating invoice.'; this.loading = false; }
       });
     } else if (this.modalMode === 'edit' && this.form.id != null) {
       // Update: mark as paid or recreate — backend only exposes PUT /{id}/payer.
