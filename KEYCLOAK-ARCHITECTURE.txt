@@ -1,0 +1,356 @@
+================================================================================
+ CLINIC-FLOW — KEYCLOAK INTEGRATION
+ Architecture, Integration & How to Test
+================================================================================
+
+This document explains how Keycloak secures the Clinic-Flow microservices
+platform: the overall architecture, how each part was integrated, and how to
+test it (both from the interface and with API tools).
+
+
+================================================================================
+ 1. WHAT IS KEYCLOAK (in one paragraph)
+================================================================================
+
+Keycloak is an open-source Identity and Access Management server. It owns user
+login. Users authenticate AGAINST Keycloak (not against our app), Keycloak
+issues a signed JWT (JSON Web Token), and that token is then sent with every
+API request. Our services only have to VERIFY the token — they never see or
+store passwords.
+
+Mental model: Keycloak is the bouncer at a club. You prove who you are to the
+bouncer once, get a wristband (the token), and every door inside (the gateway,
+the services) just checks the wristband.
+
+
+================================================================================
+ 2. HIGH-LEVEL ARCHITECTURE
+================================================================================
+
+   +-----------+      (1) login            +------------------+
+   |  Angular  | ------------------------>  |     Keycloak     |
+   | (browser) | <------ (2) JWT token ---- | (clinic-flow     |
+   +-----------+                            |  realm)          |
+        |                                   +------------------+
+        | (3) request + Bearer JWT                   ^
+        v                                            | (4) fetch public keys
+   +------------------+   validates token            | (once, then cached)
+   |   API Gateway    | ---------------------------- +
+   | (Spring Cloud    |
+   |  Gateway, :8085) |   (5) routes the request (token still attached)
+   +------------------+
+        |        |        |            |
+        v        v        v            v
+   +--------+ +--------+ +---------+ +-------------+
+   | MSUser | |MSPatie | |MSPharma | |  other MS   |
+   |        | |ntMedcin| |  cie    | |  ...        |
+   +--------+ +--------+ +---------+ +-------------+
+
+Steps:
+  1. The user logs in (on Keycloak's page or via our form -> Keycloak).
+  2. Keycloak returns a signed JWT access token.
+  3. Angular attaches the token (Authorization: Bearer <jwt>) to every API call.
+  4. The Gateway downloads Keycloak's PUBLIC keys ONCE and caches them.
+  5. The Gateway verifies each token locally (offline) and routes the request.
+
+KEY DESIGN DECISION — "GATEWAY-ONLY" ENFORCEMENT
+  Security is enforced at the API Gateway (one single place). The downstream
+  microservices trust requests that came through the gateway. This keeps the
+  microservices simple. (A stricter "zero-trust" model would also validate the
+  token inside each microservice — a possible future upgrade.)
+
+
+================================================================================
+ 3. WHY THE GATEWAY DOESN'T CALL KEYCLOAK ON EVERY REQUEST
+================================================================================
+
+A JWT is SIGNED by Keycloak using a private key that only Keycloak has. Anyone
+can read a JWT (it is encoded, NOT encrypted), but only Keycloak can produce a
+valid signature. The gateway verifies that signature using Keycloak's matching
+PUBLIC key.
+
+So the gateway downloads the public keys once (from the JWK Set URI), caches
+them, and then validates every token OFFLINE — no network call per request.
+Fast and scalable.
+
+
+================================================================================
+ 4. THE KEYCLOAK REALM (vocabulary + what we created)
+================================================================================
+
+  Keycloak server
+   └── Realm  "clinic-flow"     <- an isolated world (own users/clients/roles)
+        ├── Client  "clinic-flow-frontend"   (the Angular app, PUBLIC client)
+        ├── Roles   ADMIN / MEDECIN / PATIENT
+        └── Users   admin / doctor / patient (+ auto-created ones)
+
+  - REALM:  a sealed box of users, clients, roles. Ours is "clinic-flow".
+            (The built-in "master" realm is only for administering Keycloak.)
+  - CLIENT: an application that requests tokens. "clinic-flow-frontend" is a
+            PUBLIC client (no secret) because it runs in the browser, where a
+            secret could not be hidden. It is allowed to redirect back to
+            http://localhost:4200.
+  - ROLES:  permissions. A token carries the user's roles in
+            realm_access.roles. Our app roles are ADMIN, MEDECIN, PATIENT.
+  - USERS:  the people who log in.
+
+The realm is defined in:   docker/keycloak/clinic-flow-realm.json
+It is AUTO-IMPORTED on Keycloak's first startup (command: start-dev
+--import-realm), so the realm, client, roles and seed users exist immediately.
+
+SEEDED TEST ACCOUNTS
+  ----------------------------------------------------------------
+   Role     | Username | Password   | Realm role in token
+  ----------------------------------------------------------------
+   Admin    | admin    | admin123   | ADMIN
+   Doctor   | doctor   | doctor123  | MEDECIN
+   Patient  | patient  | patient123 | PATIENT
+  ----------------------------------------------------------------
+  (Auto-created patients/doctors use:  username = email, password = changeme123)
+
+
+================================================================================
+ 5. HOW KEYCLOAK RUNS (Docker)
+================================================================================
+
+In docker-compose.yml:
+
+  keycloak-db   -> Postgres 16, stores Keycloak's data (realms/users/sessions).
+  keycloak      -> quay.io/keycloak/keycloak:26.0
+                   command: start-dev --import-realm
+                   ports:   "8180:8080"   (browser uses 8180; 8080 is internal)
+
+THE ISSUER PROBLEM (the one tricky part of Keycloak-in-Docker)
+  A token's "issuer" (iss) is baked in when Keycloak signs it.
+   - The browser reaches Keycloak at  http://localhost:8180
+   - A backend container reaches it at http://keycloak:8080  (docker network)
+  If these disagree, token validation fails with "issuer mismatch".
+
+  Fix used:
+   - KC_HOSTNAME=localhost + KC_HOSTNAME_PORT=8180  -> every token always has
+     issuer  http://localhost:8180/realms/clinic-flow
+   - The Gateway fetches the public KEYS from the internal address but ACCEPTS
+     the localhost issuer. It is configured with jwk-set-uri (not issuer-uri),
+     so it does not force issuer-equality on the key-fetch URL.
+
+
+================================================================================
+ 6. INTEGRATION — GATEWAY (the enforcement point)
+================================================================================
+
+Module: demoApiGateway  (Spring Cloud Gateway, reactive/WebFlux, port 8085)
+
+(a) Dependencies added (pom.xml):
+      spring-boot-starter-security
+      spring-boot-starter-oauth2-resource-server
+
+(b) Where it fetches Keycloak's public keys (application.properties):
+      spring.security.oauth2.resourceserver.jwt.jwk-set-uri=
+        ${KEYCLOAK_ISSUER_URI:http://localhost:8180/realms/clinic-flow}/protocol/openid-connect/certs
+    In docker the env var KEYCLOAK_ISSUER_URI points at http://keycloak:8080/...
+    (internal), while locally it defaults to localhost:8180.
+
+(c) SecurityConfig.java  (reactive SecurityWebFilterChain):
+      - CORS preflight (OPTIONS) -> permitted
+      - /actuator/**, /welcome-message -> public
+      - EVERYTHING ELSE -> requires a valid JWT
+      - .oauth2ResourceServer(... .jwt())  -> validates the token
+
+(d) CorsConfig.java:
+      Allows the Angular origin http://localhost:4200 (incl. the Authorization
+      header) so the browser is not blocked by CORS.
+
+Result: a request with no/invalid token -> 401; with a valid token -> routed.
+
+
+================================================================================
+ 7. INTEGRATION — ANGULAR FRONTEND
+================================================================================
+
+Module: clinic-flow-frontend  (Angular 17, standalone, dev server :4200)
+
+Libraries:  keycloak-angular + keycloak-js
+
+Key files:
+  auth/keycloak.config.ts     -> url=http://localhost:8180, realm=clinic-flow,
+                                  clientId=clinic-flow-frontend
+  auth/keycloak-init.ts       -> initializes Keycloak on app start (check-sso),
+                                  enables the bearer interceptor, and only
+                                  attaches the token to gateway calls
+                                  (shouldAddToken: url starts with :8085)
+  auth/auth.guard.ts          -> protects /dashboard/** ; if not logged in it
+                                  redirects to the Keycloak login
+  app.config.ts               -> provides KeycloakService, the APP_INITIALIZER,
+                                  and the bearer interceptor
+
+Login flow (OAuth2 Authorization Code Flow — the standard):
+  1. User clicks Sign in -> redirected to Keycloak login page.
+  2. User enters credentials ON KEYCLOAK (our app never sees the password).
+  3. Keycloak redirects back to :4200 with a one-time CODE.
+  4. Angular exchanges the code for tokens.
+  5. Angular stores the token; the interceptor attaches it to gateway calls.
+
+Showing the connected user:
+  auth/current-user.service.ts reads the parsed token and exposes name, email,
+  and the app role (filtered from realm_access.roles). The shell header and the
+  sidebar user card display this, plus a logout button.
+
+
+================================================================================
+ 8. INTEGRATION — AUTO-CREATE LOGIN FOR PATIENTS / DOCTORS
+================================================================================
+
+When a Patient or Medecin is created WITHOUT a userId (the normal CRUD path),
+MSPatientMedcin auto-provisions a real login:
+
+  - Feign  -> MSUser:   creates an app account (role PATIENT or MEDECIN) and
+                        links it back (linkedPatientId).
+  - Keycloak Admin API: creates the matching Keycloak user (so they can log in),
+                        with the realm role and password "changeme123".
+
+  username = email.  firstName + lastName are sent (Keycloak 26 requires them,
+  otherwise login fails with "Account is not fully set up").
+
+  The Keycloak admin URL avoids 8080 — it uses
+  http://host.docker.internal:8180 (the host-mapped port) from the container.
+
+  Best-effort: if MSUser or Keycloak is down, the patient/doctor is still saved
+  (just unlinked / without a Keycloak login) and the error is logged. CRUD is
+  never broken by an identity-provider hiccup.
+
+
+================================================================================
+ 9. THE JWT TOKEN — WHAT'S INSIDE
+================================================================================
+
+A JWT has 3 dot-separated Base64 parts:  header.payload.signature
+Decode any token at https://jwt.io . The payload for a doctor login contains:
+
+  {
+    "iss": "http://localhost:8180/realms/clinic-flow",   // issuer
+    "exp": 1780691562,                                    // expiry
+    "preferred_username": "doctor",
+    "email": "doctor@clinicflow.local",
+    "name": "Doctor Demo",
+    "realm_access": { "roles": ["MEDECIN", ...] }         // the user's roles
+  }
+
+Two tokens are issued at login:
+  - access token  (short-lived, ~30 min) -> sent with every API call.
+  - refresh token (longer-lived)         -> silently gets a new access token so
+                                            the user is not logged out abruptly.
+
+
+================================================================================
+ 10. HOW TO TEST — VIA THE INTERFACE (browser)
+================================================================================
+
+Pre-req: the stack is running (docker compose up -d) and Keycloak is healthy.
+
+A) Start the frontend:
+     cd clinic-flow-frontend
+     npm start
+   Open  http://localhost:4200
+
+B) Test login + role display:
+     1. Click "Sign in" -> you are redirected to Keycloak (localhost:8180).
+        (This redirect is CORRECT — Keycloak owns the login page.)
+     2. Log in with one of the seed accounts:
+          admin / admin123      -> header shows "Admin Clinic" + role ADMIN
+          doctor / doctor123     -> shows "Doctor Demo"  + role MEDECIN
+          patient / patient123   -> shows "Patient Demo"  + role PATIENT
+     3. You are returned to /dashboard. The top-bar and the sidebar user card
+        now show the connected user's NAME, EMAIL and ROLE.
+
+C) Test that the token actually protects the app:
+     1. While logged in, open Patients / Doctors -> data loads (token attached).
+     2. Click Logout (sidebar) -> you are sent back to /login.
+     3. Try to open /dashboard directly while logged out -> the auth guard
+        bounces you to the Keycloak login. (Protected.)
+
+D) Test auto-created login:
+     1. Logged in as admin, go to Patients -> Add Patient (give an email).
+     2. Log out, then log back in with:  that-email / changeme123
+        -> you log in successfully as a PATIENT. (Account was auto-provisioned
+           in both MSUser and Keycloak.)
+
+E) Inspect Keycloak itself (admin console):
+     Open  http://localhost:8180   ->  admin / admin
+     Switch realm (top-left) from "master" to "clinic-flow".
+     Browse: Clients -> clinic-flow-frontend, Realm roles, Users.
+     You will see every seeded user AND the auto-created ones.
+
+
+================================================================================
+ 11. HOW TO TEST — VIA API (curl / Postman), proves it end-to-end
+================================================================================
+
+Gateway = http://localhost:8085 , Keycloak = http://localhost:8180
+
+(1) Get a token for a user:
+    curl -X POST \
+      "http://localhost:8180/realms/clinic-flow/protocol/openid-connect/token" \
+      -H "Content-Type: application/x-www-form-urlencoded" \
+      -d "client_id=clinic-flow-frontend" \
+      -d "grant_type=password" \
+      -d "username=doctor" \
+      -d "password=doctor123"
+    -> returns JSON containing "access_token".
+
+(2) Call WITHOUT a token  (must be rejected):
+    curl -i http://localhost:8085/patients
+    -> HTTP 401 Unauthorized
+
+(3) Call WITH the token   (must succeed):
+    curl http://localhost:8085/patients \
+      -H "Authorization: Bearer <PASTE_ACCESS_TOKEN>"
+    -> HTTP 200 + the data
+
+(4) Decode the token:
+    Paste the access_token at https://jwt.io and confirm:
+      iss = http://localhost:8180/realms/clinic-flow
+      realm_access.roles contains the expected role (e.g. MEDECIN)
+
+Expected results summary:
+  - no token            -> 401
+  - valid token         -> 200
+  - tampered token      -> 401 (signature no longer matches)
+  - expired token       -> 401
+
+
+================================================================================
+ 12. PORTS & URLS (quick reference)
+================================================================================
+
+  Keycloak (browser/admin) ... http://localhost:8180   (admin / admin)
+  Keycloak (inside docker) ... http://keycloak:8080
+  API Gateway ................ http://localhost:8085
+  Angular frontend ........... http://localhost:4200
+  Eureka ..................... http://localhost:8761
+  Realm name ................. clinic-flow
+  Frontend client id ......... clinic-flow-frontend
+
+  (Note: a "(unhealthy)" status on the gateway in `docker compose ps` is a
+   false alarm — its healthcheck curls "/" which now returns 401 because the
+   gateway is secured. The gateway works correctly.)
+
+
+================================================================================
+ 13. KEY FILES (where to look)
+================================================================================
+
+  docker-compose.yml ........................ keycloak + keycloak-db services
+  docker/keycloak/clinic-flow-realm.json .... realm, client, roles, seed users
+  demoApiGateway/.../SecurityConfig.java ..... gateway JWT enforcement
+  demoApiGateway/.../CorsConfig.java ......... CORS for the Angular origin
+  demoApiGateway/src/main/resources/
+        application.properties ............... jwk-set-uri (public keys)
+  clinic-flow-frontend/src/app/auth/ ......... keycloak init/config/guard +
+                                               current-user.service.ts
+  MSPatientMedcin/.../client/
+        KeycloakAdminClient.java ............. auto-create Keycloak users
+        UserClient.java (Feign) .............. auto-create MSUser accounts
+
+================================================================================
+ END
+================================================================================

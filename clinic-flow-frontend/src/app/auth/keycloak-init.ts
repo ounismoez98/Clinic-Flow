@@ -20,8 +20,11 @@ export function initializeKeycloak(keycloak: KeycloakService): () => Promise<boo
             window.location.origin + '/assets/silent-check-sso.html',
           checkLoginIframe: false,
         },
+        // Auto-attach the token to the API gateway (8085) and the Node identity API (5000).
         enableBearerInterceptor: true,
-        shouldAddToken: (req: HttpRequest<unknown>) => req.url.startsWith('http://localhost:8085'),
+        shouldAddToken: (req: HttpRequest<unknown>) =>
+          req.url.startsWith('http://localhost:8085') ||
+          req.url.startsWith('http://localhost:5000'),
       })
       .catch(err => {
         console.warn(

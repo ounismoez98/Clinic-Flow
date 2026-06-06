@@ -1,0 +1,115 @@
+<div class="p-6 max-w-6xl mx-auto">
+
+  <!-- Header -->
+  <div class="flex flex-wrap items-center justify-between gap-4 mb-2">
+    <div>
+      <h1 class="text-2xl font-extrabold text-gray-900">Identity Management</h1>
+      <p class="text-gray-500 text-sm">Keycloak users & roles — served by the Node.js API (:5000)</p>
+    </div>
+    <button (click)="openCreate()"
+            class="inline-flex items-center gap-2 px-4 py-2.5 bg-indigo-600 hover:bg-indigo-700 text-white text-sm font-semibold rounded-xl shadow-sm transition">
+      <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M12 4.5v15m7.5-7.5h-15"/></svg>
+      Add User
+    </button>
+  </div>
+
+  <p class="text-[11px] text-indigo-600 bg-indigo-50 inline-block px-2 py-1 rounded-full mb-5">
+    Non-Spring backend (Node.js + Express) validating Keycloak tokens
+  </p>
+
+  <!-- Toolbar -->
+  <div class="flex items-center gap-3 mb-4">
+    <input [(ngModel)]="search" (keyup.enter)="load()" type="text" placeholder="Search users… (Enter)"
+           class="flex-1 min-w-[220px] px-4 py-2.5 border border-gray-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500"/>
+    <button (click)="load()" class="px-4 py-2.5 border border-gray-200 rounded-xl text-sm font-semibold text-gray-600 hover:bg-gray-50">Search</button>
+  </div>
+
+  <div *ngIf="error" class="mb-4 px-4 py-3 bg-red-50 text-red-700 text-sm rounded-xl border border-red-100">{{ error }}</div>
+  <div *ngIf="loading" class="py-16 text-center text-gray-400 text-sm">Loading users…</div>
+
+  <!-- Table -->
+  <div *ngIf="!loading && !error" class="bg-white border border-gray-100 rounded-2xl overflow-hidden shadow-sm">
+    <table class="w-full text-sm">
+      <thead class="bg-gray-50 text-gray-500 text-xs uppercase tracking-wider">
+        <tr>
+          <th class="text-left px-5 py-3 font-semibold">User</th>
+          <th class="text-left px-5 py-3 font-semibold">Email</th>
+          <th class="text-left px-5 py-3 font-semibold">Status</th>
+          <th class="text-right px-5 py-3 font-semibold">Actions</th>
+        </tr>
+      </thead>
+      <tbody class="divide-y divide-gray-100">
+        <tr *ngFor="let u of users" class="hover:bg-gray-50/60 transition">
+          <td class="px-5 py-3">
+            <div class="flex items-center gap-3">
+              <div class="w-9 h-9 rounded-full bg-indigo-100 text-indigo-700 font-bold text-xs flex items-center justify-center">{{ initials(u) }}</div>
+              <div>
+                <p class="font-semibold text-gray-900">{{ u.firstName }} {{ u.lastName }}</p>
+                <p class="text-xs text-gray-400">{{ u.username }}</p>
+              </div>
+            </div>
+          </td>
+          <td class="px-5 py-3 text-gray-700">{{ u.email }}</td>
+          <td class="px-5 py-3">
+            <span class="px-2.5 py-1 rounded-full text-xs font-semibold"
+                  [class]="u.enabled ? 'bg-green-100 text-green-700' : 'bg-gray-100 text-gray-500'">
+              {{ u.enabled ? 'Enabled' : 'Disabled' }}
+            </span>
+          </td>
+          <td class="px-5 py-3">
+            <div class="flex items-center justify-end">
+              <button (click)="remove(u)" title="Delete"
+                      class="p-2 rounded-lg text-gray-400 hover:text-red-600 hover:bg-red-50 transition">
+                <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M14.74 9l-.346 9m-4.788 0L9.26 9m9.968-3.21c.342.052.682.107 1.022.166m-1.022-.165L18.16 19.673a2.25 2.25 0 0 1-2.244 2.077H8.084a2.25 2.25 0 0 1-2.244-2.077L4.772 5.79m14.456 0a48.108 48.108 0 0 0-3.478-.397m-12 .562c.34-.059.68-.114 1.022-.165m0 0a48.11 48.11 0 0 1 3.478-.397m7.5 0v-.916c0-1.18-.91-2.164-2.09-2.201a51.964 51.964 0 0 0-3.32 0c-1.18.037-2.09 1.022-2.09 2.201v.916m7.5 0a48.667 48.667 0 0 0-7.5 0"/></svg>
+              </button>
+            </div>
+          </td>
+        </tr>
+        <tr *ngIf="users.length === 0">
+          <td colspan="4" class="px-5 py-12 text-center text-gray-400">No users found.</td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+</div>
+
+<!-- Create modal -->
+<div *ngIf="showModal" class="fixed inset-0 z-50 flex items-center justify-center bg-black/40 p-4" (click)="closeModal()">
+  <div class="bg-white rounded-2xl shadow-xl w-full max-w-lg p-6" (click)="$event.stopPropagation()">
+    <h2 class="text-lg font-extrabold text-gray-900 mb-5">Add User</h2>
+    <form (ngSubmit)="save()" class="grid grid-cols-2 gap-4">
+      <div>
+        <label class="block text-xs font-semibold text-gray-600 mb-1">Username *</label>
+        <input [(ngModel)]="form.username" name="username" required class="w-full px-3 py-2 border border-gray-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500"/>
+      </div>
+      <div>
+        <label class="block text-xs font-semibold text-gray-600 mb-1">Email *</label>
+        <input [(ngModel)]="form.email" name="email" type="email" required class="w-full px-3 py-2 border border-gray-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500"/>
+      </div>
+      <div>
+        <label class="block text-xs font-semibold text-gray-600 mb-1">First name</label>
+        <input [(ngModel)]="form.firstName" name="firstName" class="w-full px-3 py-2 border border-gray-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500"/>
+      </div>
+      <div>
+        <label class="block text-xs font-semibold text-gray-600 mb-1">Last name</label>
+        <input [(ngModel)]="form.lastName" name="lastName" class="w-full px-3 py-2 border border-gray-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500"/>
+      </div>
+      <div>
+        <label class="block text-xs font-semibold text-gray-600 mb-1">Password</label>
+        <input [(ngModel)]="form.password" name="password" class="w-full px-3 py-2 border border-gray-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500"/>
+      </div>
+      <div>
+        <label class="block text-xs font-semibold text-gray-600 mb-1">Role</label>
+        <select [(ngModel)]="form.role" name="role" class="w-full px-3 py-2 border border-gray-200 rounded-lg text-sm bg-white focus:outline-none focus:ring-2 focus:ring-indigo-500">
+          <option *ngFor="let r of assignableRoles" [value]="r">{{ r }}</option>
+        </select>
+      </div>
+      <div class="col-span-2 flex justify-end gap-3 mt-2">
+        <button type="button" (click)="closeModal()" class="px-4 py-2 text-sm font-semibold text-gray-600 hover:bg-gray-100 rounded-lg transition">Cancel</button>
+        <button type="submit" [disabled]="saving" class="px-5 py-2 bg-indigo-600 hover:bg-indigo-700 disabled:bg-indigo-300 text-white text-sm font-semibold rounded-lg transition">
+          {{ saving ? 'Saving…' : 'Create' }}
+        </button>
+      </div>
+    </form>
+  </div>
+</div>

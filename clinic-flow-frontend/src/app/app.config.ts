@@ -5,6 +5,7 @@ import { KeycloakService, KeycloakBearerInterceptor } from 'keycloak-angular';
 
 import { routes } from './app.routes';
 import { initializeKeycloak } from './auth/keycloak-init';
+import { UnauthorizedInterceptor } from './auth/unauthorized.interceptor';
 
 export const appConfig: ApplicationConfig = {
   providers: [
@@ -28,6 +29,13 @@ export const appConfig: ApplicationConfig = {
     {
       provide: HTTP_INTERCEPTORS,
       useClass: KeycloakBearerInterceptor,
+      multi: true,
+    },
+
+    // On 401 from our APIs (expired/invalid token) -> redirect to Keycloak login.
+    {
+      provide: HTTP_INTERCEPTORS,
+      useClass: UnauthorizedInterceptor,
       multi: true,
     },
   ],

@@ -1,0 +1,18 @@
+{
+  "name": "identity-management-node",
+  "version": "1.0.0",
+  "description": "Identity management API (Node.js + Express) integrated with Keycloak",
+  "type": "module",
+  "main": "src/server.js",
+  "scripts": {
+    "start": "node src/server.js",
+    "dev": "node --watch src/server.js"
+  },
+  "dependencies": {
+    "cors": "^2.8.5",
+    "dotenv": "^16.4.5",
+    "eureka-js-client": "^4.5.0",
+    "express": "^4.19.2",
+    "jose": "^5.9.6"
+  }
+}

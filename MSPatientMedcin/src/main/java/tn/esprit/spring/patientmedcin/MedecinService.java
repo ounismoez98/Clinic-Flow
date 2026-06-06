@@ -3,9 +3,10 @@ package tn.esprit.spring.patientmedcin;
 import feign.FeignException;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
-import tn.esprit.spring.patientmedcin.client.KeycloakAdminClient;
+import tn.esprit.spring.patientmedcin.client.IdentityProvisioningService;
 import tn.esprit.spring.patientmedcin.client.UserClient;
 import tn.esprit.spring.patientmedcin.client.UserDto;
+import tn.esprit.spring.patientmedcin.messaging.MedecinEventPublisher;
 
 import java.util.List;
 import java.util.stream.Collectors;
@@ -17,14 +18,17 @@ public class MedecinService implements IMedecinService {
 
     private final MedecinRepository medecinRepository;
     private final UserClient userClient;
-    private final KeycloakAdminClient keycloakAdminClient;
+    private final IdentityProvisioningService identityProvisioningService;
+    private final MedecinEventPublisher medecinEventPublisher;
 
     public MedecinService(MedecinRepository medecinRepository,
                           UserClient userClient,
-                          KeycloakAdminClient keycloakAdminClient) {
+                          IdentityProvisioningService identityProvisioningService,
+                          MedecinEventPublisher medecinEventPublisher) {
         this.medecinRepository = medecinRepository;
         this.userClient = userClient;
-        this.keycloakAdminClient = keycloakAdminClient;
+        this.identityProvisioningService = identityProvisioningService;
+        this.medecinEventPublisher = medecinEventPublisher;
     }
 
     @Override
@@ -39,7 +43,17 @@ public class MedecinService implements IMedecinService {
         if (medecin.getUserId() == null && medecin.getEmail() != null) {
             medecin.setUserId(provisionMedecinAccount(medecin));
         }
-        return medecinRepository.save(medecin);
+        Medecin saved = medecinRepository.save(medecin);
+
+        // ASYNCHRONOUS (RabbitMQ): tell MSNotification a doctor was created.
+        medecinEventPublisher.publish("CREATED", saved.getId(),
+                fullName(saved), saved.getSpecialite(), saved.getEmail());
+        return saved;
+    }
+
+    private String fullName(Medecin m) {
+        return ("Dr. " + (m.getNom() != null ? m.getNom() : "") + " "
+                + (m.getPrenom() != null ? m.getPrenom() : "")).trim();
     }
 
     /** Create MSUser account (role MEDECIN) + Keycloak login. Returns MSUser id or null. */
@@ -53,8 +67,8 @@ public class MedecinService implements IMedecinService {
         } catch (FeignException e) {
             return null;   // MSUser unreachable -> doctor still created, unlinked
         }
-        keycloakAdminClient.createUser(username, medecin.getEmail(), DEFAULT_PASSWORD, "MEDECIN",
-                medecin.getPrenom(), medecin.getNom());
+        identityProvisioningService.createLogin(username, medecin.getEmail(), DEFAULT_PASSWORD,
+                "MEDECIN", medecin.getPrenom(), medecin.getNom());
         return userId;
     }
 

@@ -36,6 +36,11 @@ public class DemoApiGatewayApplication {
 				.route("pharmacie-welcome-message", r -> r.path("/welcome-message").uri("lb://MSPharmacie"))
 				.route("ordonnances", r -> r.path("/ordonnances/**").uri("lb://MSOrdonnance"))
 				.route("notifications", r -> r.path("/notifications/**").uri("lb://MSNotification"))
+				// Node.js identity service (non-Spring). Strip the /iam prefix so the
+				// Node app still receives its own /api/* paths.
+				.route("identity", r -> r.path("/iam/**")
+						.filters(f -> f.stripPrefix(1))
+						.uri("lb://IDENTITY-SERVICE"))
 				.build();
 
 	}

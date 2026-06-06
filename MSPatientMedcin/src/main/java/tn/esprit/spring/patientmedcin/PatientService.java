@@ -5,8 +5,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import tn.esprit.spring.patientmedcin.client.UserClient;
 import tn.esprit.spring.patientmedcin.client.UserDto;
-import tn.esprit.spring.patientmedcin.client.KeycloakAdminClient;
-import tn.esprit.spring.patientmedcin.messaging.PatientUserLinkedPublisher;
+import tn.esprit.spring.patientmedcin.client.IdentityProvisioningService;
 import tn.esprit.spring.patientmedcin.messaging.PatientEventPublisher;
 
 import java.util.List;
@@ -19,9 +18,8 @@ public class PatientService implements IPatientService {
 	private final PatientRepository patientRepository;
 	private final MedecinRepository medecinRepository;
 	private final UserClient userClient;
-	private final PatientUserLinkedPublisher patientUserLinkedPublisher;
 	private final PatientEventPublisher patientEventPublisher;
-	private final KeycloakAdminClient keycloakAdminClient;
+	private final IdentityProvisioningService identityProvisioningService;
 
 	private static final String DEFAULT_PASSWORD = "changeme123";
 
@@ -29,15 +27,13 @@ public class PatientService implements IPatientService {
 			PatientRepository patientRepository,
 			MedecinRepository medecinRepository,
 			UserClient userClient,
-			PatientUserLinkedPublisher patientUserLinkedPublisher,
 			PatientEventPublisher patientEventPublisher,
-			KeycloakAdminClient keycloakAdminClient) {
+			IdentityProvisioningService identityProvisioningService) {
 		this.patientRepository = patientRepository;
 		this.medecinRepository = medecinRepository;
 		this.userClient = userClient;
-		this.patientUserLinkedPublisher = patientUserLinkedPublisher;
 		this.patientEventPublisher = patientEventPublisher;
-		this.keycloakAdminClient = keycloakAdminClient;
+		this.identityProvisioningService = identityProvisioningService;
 	}
 
     @Override
@@ -63,10 +59,19 @@ public class PatientService implements IPatientService {
 		}
 
 		Patient saved = patientRepository.save(patient);
+
+		// SYNCHRONOUS (Feign): link the user to this patient now that we have both
+		// ids. This replaces the old async patient.user.linked event — we're already
+		// talking to MSUser synchronously, so an extra message was redundant.
 		if (saved.getUserId() != null) {
-			patientUserLinkedPublisher.publish(saved.getId(), saved.getUserId(), saved.getEmail());
+			try {
+				userClient.linkPatient(saved.getUserId(), saved.getId());
+			} catch (FeignException e) {
+				// non-fatal: the patient is saved; the back-link just isn't set
+			}
 		}
-		// async fire-and-forget: tell MSNotification a patient was created
+
+		// ASYNCHRONOUS (RabbitMQ): tell MSNotification a patient was created.
 		patientEventPublisher.publish("CREATED", saved.getId(),
 				fullName(saved), saved.getEmail());
 		return saved;
@@ -91,9 +96,10 @@ public class PatientService implements IPatientService {
 			// MSUser unreachable -> patient still created, just unlinked.
 			return null;
 		}
-		// Best-effort Keycloak login (failures are swallowed inside the client).
-		keycloakAdminClient.createUser(username, patient.getEmail(), DEFAULT_PASSWORD, "PATIENT",
-				patient.getPrenom(), patient.getNom());
+		// Provision the Keycloak login through the Node identity service
+		// (the single owner of Keycloak admin ops). Best-effort.
+		identityProvisioningService.createLogin(username, patient.getEmail(), DEFAULT_PASSWORD,
+				"PATIENT", patient.getPrenom(), patient.getNom());
 		return userId;
 	}
 
@@ -131,8 +137,13 @@ public class PatientService implements IPatientService {
 						existing.setFavoriteMedecinIds(patient.getFavoriteMedecinIds());
 					}
 					Patient saved = patientRepository.save(existing);
+					// keep the user<->patient link in sync (synchronous Feign)
 					if (saved.getUserId() != null) {
-						patientUserLinkedPublisher.publish(saved.getId(), saved.getUserId(), saved.getEmail());
+						try {
+							userClient.linkPatient(saved.getUserId(), saved.getId());
+						} catch (FeignException e) {
+							// non-fatal
+						}
 					}
 					// async fire-and-forget: only when the patient becomes Admitted
 					if ("Admitted".equals(saved.getStatut()) && !"Admitted".equals(previousStatut)) {

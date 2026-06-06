@@ -11,40 +11,32 @@ import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 
 /**
- * Déclare l’exchange, la queue et la liaison côté producteur également.
- * Sinon, sans MSUser démarré avant la publication, aucune queue n’est liée à
- * {@code clinic.patient.exchange} + {@code patient.user.linked} → messages non routés, perdus sans erreur HTTP.
+ * Declares the exchange/queue/binding for the patient.event async flow
+ * (MSPatientMedcin -> MSNotification) on the producer side too, so messages
+ * route even if MSNotification starts later.
+ *
+ * (The old patient.user.linked async flow was removed: the patient<->user link
+ * is now set synchronously via a Feign call to MSUser.)
  */
 @Configuration
 public class RabbitMqClinicPatientConfig {
 
 	public static final String CLINIC_PATIENT_EXCHANGE = "clinic.patient.exchange";
-	public static final String PATIENT_USER_LINKED_ROUTING_KEY = "patient.user.linked";
-	public static final String PATIENT_USER_LINKED_QUEUE = "patient.user.linked.queue";
 
 	// Async "a patient event happened" -> MSNotification reacts.
 	public static final String PATIENT_EVENT_ROUTING_KEY = "patient.event";
 	public static final String PATIENT_EVENT_QUEUE = "patient.event.queue";
+
+	// Async "a medecin event happened" -> MSNotification reacts.
+	// Same exchange, different routing key -> a separate queue/consumer.
+	public static final String MEDECIN_EVENT_ROUTING_KEY = "medecin.event";
+	public static final String MEDECIN_EVENT_QUEUE = "medecin.event.queue";
 
 	@Bean
 	public DirectExchange clinicPatientExchange() {
 		return new DirectExchange(CLINIC_PATIENT_EXCHANGE);
 	}
 
-	@Bean
-	public Queue patientUserLinkedQueue() {
-		return new Queue(PATIENT_USER_LINKED_QUEUE);
-	}
-
-	@Bean
-	public Binding patientUserLinkedBinding(Queue patientUserLinkedQueue, DirectExchange clinicPatientExchange) {
-		return BindingBuilder.bind(patientUserLinkedQueue)
-				.to(clinicPatientExchange)
-				.with(PATIENT_USER_LINKED_ROUTING_KEY);
-	}
-
-	// Declare the patient-event queue + binding on the producer side too, so the
-	// message routes even if MSNotification starts later (otherwise it's dropped silently).
 	@Bean
 	public Queue patientEventQueue() {
 		return new Queue(PATIENT_EVENT_QUEUE);
@@ -55,6 +47,18 @@ public class RabbitMqClinicPatientConfig {
 		return BindingBuilder.bind(patientEventQueue)
 				.to(clinicPatientExchange)
 				.with(PATIENT_EVENT_ROUTING_KEY);
+	}
+
+	@Bean
+	public Queue medecinEventQueue() {
+		return new Queue(MEDECIN_EVENT_QUEUE);
+	}
+
+	@Bean
+	public Binding medecinEventBinding(Queue medecinEventQueue, DirectExchange clinicPatientExchange) {
+		return BindingBuilder.bind(medecinEventQueue)
+				.to(clinicPatientExchange)
+				.with(MEDECIN_EVENT_ROUTING_KEY);
 	}
 
 	@Bean

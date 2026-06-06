@@ -17,8 +17,8 @@
         </a>
       </nav>
       <div class="hidden md:flex items-center gap-3">
-        <a [routerLink]="['/login']" [queryParams]="{mode: 'signin'}" class="px-4 py-2 text-sm font-medium text-gray-600 hover:text-blue-600 transition-colors cursor-pointer">Sign In</a>
-        <a [routerLink]="['/login']" [queryParams]="{mode: 'signup'}" class="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white text-sm font-semibold rounded-lg shadow-sm transition-all duration-150 hover:shadow-md cursor-pointer">
+        <a (click)="login()" class="px-4 py-2 text-sm font-medium text-gray-600 hover:text-blue-600 transition-colors cursor-pointer">Sign In</a>
+        <a (click)="login()" class="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white text-sm font-semibold rounded-lg shadow-sm transition-all duration-150 hover:shadow-md cursor-pointer">
           Get Started
         </a>
       </div>
@@ -36,8 +36,8 @@
       {{ link.label }}
     </a>
     <div class="pt-2 flex flex-col gap-2">
-      <a [routerLink]="['/login']" [queryParams]="{mode: 'signin'}" class="w-full text-center px-4 py-2 text-sm font-medium text-gray-600 border border-gray-200 rounded-lg hover:bg-gray-50 transition cursor-pointer">Sign In</a>
-      <a [routerLink]="['/login']" [queryParams]="{mode: 'signup'}" class="w-full text-center px-4 py-2 bg-blue-600 text-white text-sm font-semibold rounded-lg hover:bg-blue-700 transition cursor-pointer">Get Started</a>
+      <a (click)="login()" class="w-full text-center px-4 py-2 text-sm font-medium text-gray-600 border border-gray-200 rounded-lg hover:bg-gray-50 transition">Sign In</a>
+      <a (click)="login()" class="w-full text-center px-4 py-2 bg-blue-600 text-white text-sm font-semibold rounded-lg hover:bg-blue-700 transition">Get Started</a>
     </div>
   </div>
 </header>
@@ -61,7 +61,7 @@
           A unified platform connecting patients, doctors, pharmacy, laboratory, and billing — all powered by independent microservices.
         </p>
         <div class="flex flex-col sm:flex-row gap-4 justify-center lg:justify-start">
-          <a (click)="handleProtectedClick('/dashboard')" class="px-7 py-3.5 bg-blue-600 hover:bg-blue-700 text-white font-semibold rounded-xl shadow-lg shadow-blue-200 hover:shadow-xl transition-all duration-200 text-sm text-center cursor-pointer">
+          <a (click)="login()" class="px-7 py-3.5 bg-blue-600 hover:bg-blue-700 text-white font-semibold rounded-xl shadow-lg shadow-blue-200 hover:shadow-xl transition-all duration-200 text-sm text-center cursor-pointer">
             Explore Dashboard
           </a>
           <button class="px-7 py-3.5 border border-gray-300 hover:border-blue-400 text-gray-700 hover:text-blue-600 font-semibold rounded-xl transition-all duration-200 text-sm bg-white hover:bg-blue-50">

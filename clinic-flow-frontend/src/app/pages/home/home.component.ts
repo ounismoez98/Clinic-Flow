@@ -25,6 +25,13 @@ export class HomeComponent implements OnInit {
     }
   }
 
+  /** Send the user straight to the Keycloak login, then to the dashboard. */
+  login() {
+    this.keycloak.login({
+      redirectUri: window.location.origin + '/dashboard/patients',
+    });
+  }
+
   navLinks = [
     { label: 'Dashboard', route: '/dashboard' },
     { label: 'Patients', route: '/dashboard/patients' },
@@ -54,11 +61,9 @@ export class HomeComponent implements OnInit {
 
   handleProtectedClick(route: string) {
     if (!this.isLoggedIn) {
-      this.router.navigate(['/login']);
-    } else {
-      if (route !== '#') {
-        this.router.navigate([route]);
-      }
+      this.login();
+    } else if (route !== '#') {
+      this.router.navigate([route]);
     }
   }
 }

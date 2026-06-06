@@ -35,8 +35,19 @@ export class CurrentUserService {
     return this.keycloak.isLoggedIn();
   }
 
+  /** Send the user to the Keycloak login, returning to `redirect` afterwards. */
+  login(redirect = '/dashboard/patients'): void {
+    this.keycloak.login({ redirectUri: window.location.origin + redirect });
+  }
+
   logout(): void {
-    this.keycloak.logout(window.location.origin + '/login');
+    this.keycloak.logout(window.location.origin + '/');
+  }
+
+  /** True if the logged-in user has the given app role. */
+  hasRole(role: string): boolean {
+    const token: any = this.keycloak.getKeycloakInstance()?.tokenParsed ?? {};
+    return (token.realm_access?.roles ?? []).includes(role);
   }
 
   private initialsOf(name: string): string {

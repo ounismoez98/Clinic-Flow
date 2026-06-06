@@ -44,22 +44,9 @@ services:
       retries: 5
       start_period: 20s
 
-  # --- Keycloak (identity provider) + its own Postgres database ---
-  keycloak-db:
-    image: postgres:16
-    container_name: clinicflow-keycloak-db
-    environment:
-      POSTGRES_DB: keycloak
-      POSTGRES_USER: keycloak
-      POSTGRES_PASSWORD: keycloak
-    volumes:
-      - clinicflow_keycloak_db:/var/lib/postgresql/data
-    healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U keycloak"]
-      interval: 5s
-      timeout: 5s
-      retries: 12
-
+  # --- Keycloak (identity provider) — uses its built-in H2 file database ---
+  # H2 is Keycloak's dev default (fine for this project). Data is kept in a
+  # volume so the realm/users survive restarts. Not for production use.
   keycloak:
     image: quay.io/keycloak/keycloak:26.0
     container_name: clinicflow-keycloak
@@ -69,11 +56,8 @@ services:
       # Admin console login (http://localhost:8180)
       KC_BOOTSTRAP_ADMIN_USERNAME: admin
       KC_BOOTSTRAP_ADMIN_PASSWORD: admin
-      # Connect Keycloak to its Postgres DB
-      KC_DB: postgres
-      KC_DB_URL: jdbc:postgresql://keycloak-db:5432/keycloak
-      KC_DB_USERNAME: keycloak
-      KC_DB_PASSWORD: keycloak
+      # Use the built-in H2 file database (no separate DB container).
+      KC_DB: dev-file
       # Tokens must say "issued by http://localhost:8180" so both browser and gateway agree
       KC_HOSTNAME: localhost
       KC_HOSTNAME_PORT: "8180"
@@ -81,11 +65,12 @@ services:
     ports:
       - "8180:8080"
     volumes:
-      # The realm file in ./docker/keycloak is auto-imported on first start
-      - ./docker/keycloak:/opt/keycloak/data/import
-    depends_on:
-      keycloak-db:
-        condition: service_healthy
+      # Persist all Keycloak data (incl. the H2 database) so realm/users survive
+      # restarts. Mounting the whole data dir keeps the keycloak user's write
+      # permissions (a volume on the h2 subfolder alone is created root-owned).
+      - clinicflow_keycloak_h2:/opt/keycloak/data
+      # The realm file is auto-imported on first start (read-only bind inside data).
+      - ./docker/keycloak:/opt/keycloak/data/import:ro
     healthcheck:
       test: ["CMD-SHELL", "exec 3<>/dev/tcp/localhost/8080 && echo done"]
       interval: 10s
@@ -248,12 +233,9 @@ services:
     environment:
       <<: *spring-env
       EUREKA_INSTANCE_HOSTNAME: mspatientmedcin
-      # Keycloak admin API for auto-provisioning patient/doctor logins.
-      # Uses the host-mapped 8180 port (via host.docker.internal) to avoid 8080.
-      KEYCLOAK_ADMIN_BASE_URL: http://host.docker.internal:8180
-      KEYCLOAK_ADMIN_REALM: clinic-flow
-      KEYCLOAK_ADMIN_USERNAME: admin
-      KEYCLOAK_ADMIN_PASSWORD: admin
+      # Patient/doctor logins are provisioned via the Node identity service
+      # (IDENTITY-SERVICE in Eureka). Shared secret for that internal call:
+      IDENTITY_SERVICE_API_KEY: clinicflow-internal-secret
     volumes:
       - clinicflow_patient_h2:/app/Database/Data
     depends_on:
@@ -261,8 +243,9 @@ services:
         condition: service_healthy
       config-server:
         condition: service_healthy
-      keycloak:
-        condition: service_healthy
+      # Provisions Keycloak logins via the Node identity service (Feign).
+      identity-service:
+        condition: service_started
     healthcheck:
       test: ["CMD", "curl", "-f", "http://localhost:8082/actuator/health"]
       interval: 15s
@@ -326,6 +309,9 @@ services:
         condition: service_healthy
       msrendezvous:
         condition: service_healthy
+      # Node identity service (no healthcheck -> wait for "started", not "healthy").
+      identity-service:
+        condition: service_started
     healthcheck:
       test: ["CMD", "curl", "http://localhost:8085/"]
       interval: 15s
@@ -354,6 +340,39 @@ services:
       eureka:
         condition: service_healthy
       mspatientmedcin:
+        condition: service_healthy
+
+  # Node.js identity-management service (non-Spring). The single owner of
+  # Keycloak admin operations. Registers in Eureka as IDENTITY-SERVICE so the
+  # gateway routes /iam/** to it.
+  identity-service:
+    build:
+      context: ./identity-management-node
+      dockerfile: Dockerfile
+    container_name: clinicflow-identity-service
+    hostname: identity-service
+    ports:
+      - "5000:5000"
+    environment:
+      PORT: "5000"
+      # Fetch keys + call admin API on the internal docker address...
+      KEYCLOAK_BASE_URL: http://keycloak:8080
+      KEYCLOAK_REALM: clinic-flow
+      # ...but the token issuer stays localhost:8180 (that's what tokens carry).
+      KEYCLOAK_ISSUER: http://localhost:8180/realms/clinic-flow
+      KEYCLOAK_ADMIN_USERNAME: admin
+      KEYCLOAK_ADMIN_PASSWORD: admin
+      CORS_ORIGIN: http://localhost:4200
+      INTERNAL_API_KEY: clinicflow-internal-secret
+      # Register with Eureka under the container hostname.
+      EUREKA_HOST: eureka
+      EUREKA_PORT: "8761"
+      SERVICE_HOSTNAME: identity-service
+      SERVICE_NAME: IDENTITY-SERVICE
+    depends_on:
+      keycloak:
+        condition: service_healthy
+      eureka:
         condition: service_healthy
 
   frontend:
@@ -416,5 +435,5 @@ volumes:
   clinicflow_mysql_data:
   clinicflow_patient_h2:
   clinicflow_user_h2:
-  clinicflow_keycloak_db:
+  clinicflow_keycloak_h2:
   clinicflow_rendezvous_h2:

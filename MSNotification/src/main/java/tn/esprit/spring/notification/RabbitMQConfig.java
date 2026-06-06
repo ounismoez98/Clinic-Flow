@@ -22,6 +22,10 @@ public class RabbitMQConfig {
     public static final String PATIENT_EVENT_ROUTING_KEY = "patient.event";
     public static final String PATIENT_EVENT_QUEUE = "patient.event.queue";
 
+    // Second async flow from MSPatientMedcin: doctor events.
+    public static final String MEDECIN_EVENT_ROUTING_KEY = "medecin.event";
+    public static final String MEDECIN_EVENT_QUEUE = "medecin.event.queue";
+
     @Bean
     public Queue factureQueue() {
         return new Queue(FACTURE_QUEUE, true);
@@ -42,6 +46,18 @@ public class RabbitMQConfig {
         return BindingBuilder.bind(patientEventQueue)
                 .to(clinicPatientExchange)
                 .with(PATIENT_EVENT_ROUTING_KEY);
+    }
+
+    @Bean
+    public Queue medecinEventQueue() {
+        return new Queue(MEDECIN_EVENT_QUEUE);
+    }
+
+    @Bean
+    public Binding medecinEventBinding(Queue medecinEventQueue, DirectExchange clinicPatientExchange) {
+        return BindingBuilder.bind(medecinEventQueue)
+                .to(clinicPatientExchange)
+                .with(MEDECIN_EVENT_ROUTING_KEY);
     }
 
     @Bean

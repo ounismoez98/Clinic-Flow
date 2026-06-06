@@ -88,4 +88,16 @@ public class UserController {
         }
         return ResponseEntity.noContent().build();
     }
+
+    /**
+     * Link a user to a patient (sets linkedPatientId). Called SYNCHRONOUSLY by
+     * MSPatientMedcin via Feign right after a patient is created — replaces the
+     * old async patient.user.linked RabbitMQ event (which was redundant since
+     * we already talk to MSUser synchronously at creation time).
+     */
+    @PutMapping("/{id}/link/{patientId}")
+    public ResponseEntity<Void> linkPatient(@PathVariable int id, @PathVariable int patientId) {
+        userService.linkPatient(id, patientId);
+        return ResponseEntity.noContent().build();
+    }
 }
