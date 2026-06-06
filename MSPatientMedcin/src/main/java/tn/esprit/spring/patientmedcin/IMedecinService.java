@@ -12,4 +12,8 @@ public interface IMedecinService {
     boolean delete(int id);
 
     Medecin getById(int id);
+
+    MedecinStats getStats();
+
+    List<Medecin> filter(String statut, String specialite);
 }

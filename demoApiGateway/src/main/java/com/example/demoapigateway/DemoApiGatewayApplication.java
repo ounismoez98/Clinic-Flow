@@ -35,6 +35,7 @@ public class DemoApiGatewayApplication {
 				.route("medicaments", r -> r.path("/medicaments/**").uri("lb://MSPharmacie"))
 				.route("pharmacie-welcome-message", r -> r.path("/welcome-message").uri("lb://MSPharmacie"))
 				.route("ordonnances", r -> r.path("/ordonnances/**").uri("lb://MSOrdonnance"))
+				.route("notifications", r -> r.path("/notifications/**").uri("lb://MSNotification"))
 				.build();
 
 	}

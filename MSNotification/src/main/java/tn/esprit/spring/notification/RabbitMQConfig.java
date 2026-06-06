@@ -1,5 +1,8 @@
 package tn.esprit.spring.notification;
 
+import org.springframework.amqp.core.Binding;
+import org.springframework.amqp.core.BindingBuilder;
+import org.springframework.amqp.core.DirectExchange;
 import org.springframework.amqp.core.Queue;
 import org.springframework.amqp.rabbit.config.SimpleRabbitListenerContainerFactory;
 import org.springframework.amqp.rabbit.connection.ConnectionFactory;
@@ -14,9 +17,31 @@ public class RabbitMQConfig {
 
     public static final String FACTURE_QUEUE = "facture_paid_queue";
 
+    // Must match MSPatientMedcin's RabbitMqClinicPatientConfig exactly.
+    public static final String CLINIC_PATIENT_EXCHANGE = "clinic.patient.exchange";
+    public static final String PATIENT_EVENT_ROUTING_KEY = "patient.event";
+    public static final String PATIENT_EVENT_QUEUE = "patient.event.queue";
+
     @Bean
     public Queue factureQueue() {
         return new Queue(FACTURE_QUEUE, true);
+    }
+
+    @Bean
+    public DirectExchange clinicPatientExchange() {
+        return new DirectExchange(CLINIC_PATIENT_EXCHANGE);
+    }
+
+    @Bean
+    public Queue patientEventQueue() {
+        return new Queue(PATIENT_EVENT_QUEUE);
+    }
+
+    @Bean
+    public Binding patientEventBinding(Queue patientEventQueue, DirectExchange clinicPatientExchange) {
+        return BindingBuilder.bind(patientEventQueue)
+                .to(clinicPatientExchange)
+                .with(PATIENT_EVENT_ROUTING_KEY);
     }
 
     @Bean

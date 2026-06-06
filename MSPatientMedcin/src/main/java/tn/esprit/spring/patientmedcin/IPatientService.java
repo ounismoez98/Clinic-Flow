@@ -23,4 +23,10 @@ public interface IPatientService {
     List<Medecin> getFavoriteMedecins(int patientId);
 
     void saveFavoriteMedecin(int patientId, int medecinId);
+
+    PatientStats getStats();
+
+    List<Patient> filter(String statut, String genre, String groupeSanguin, Integer medecinId);
+
+    PatientDetailsResponse getPatientDetails(int id);
 }

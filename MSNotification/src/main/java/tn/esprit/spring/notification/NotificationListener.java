@@ -15,6 +15,9 @@ public class NotificationListener {
     @Autowired
     private JavaMailSender mailSender;
 
+    @Autowired
+    private NotificationRepository notificationRepository;
+
     // 🔹 Réception
     @RabbitListener(queues = RabbitMQConfig.FACTURE_QUEUE, containerFactory = "rabbitListenerContainerFactory")
     public void receiveFacture(FactureDTO factureDTO) {
@@ -30,6 +33,10 @@ public class NotificationListener {
             }
 
             String email = (patient != null && patient.getEmail() != null) ? patient.getEmail() : "client@clinic.com";
+
+            // Persist so it shows in the frontend bell.
+            String text = "Facture N°" + factureDTO.getId() + " de " + factureDTO.getMontant() + " DT payée.";
+            notificationRepository.save(new Notification("FACTURE_PAID", text, email));
 
             System.out.println("📧 Envoi email à : " + email);
 

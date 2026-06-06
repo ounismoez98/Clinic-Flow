@@ -18,6 +18,13 @@ public class Patient {
     private String prenom;
     private String email;
 
+    private String telephone;
+    private String dateNaissance;   // ISO yyyy-MM-dd; age is derived on the frontend
+    private String genre;           // Male / Female
+    private String groupeSanguin;   // A+, O-, ...
+    private Integer medecinId;      // assigned doctor (links to Medecin.id)
+    private String statut;          // Active / Admitted / Discharged
+
     private Integer userId;
 
     @ElementCollection
@@ -69,6 +76,54 @@ public class Patient {
 
     public void setEmail(String email) {
         this.email = email;
+    }
+
+    public String getTelephone() {
+        return telephone;
+    }
+
+    public void setTelephone(String telephone) {
+        this.telephone = telephone;
+    }
+
+    public String getDateNaissance() {
+        return dateNaissance;
+    }
+
+    public void setDateNaissance(String dateNaissance) {
+        this.dateNaissance = dateNaissance;
+    }
+
+    public String getGenre() {
+        return genre;
+    }
+
+    public void setGenre(String genre) {
+        this.genre = genre;
+    }
+
+    public String getGroupeSanguin() {
+        return groupeSanguin;
+    }
+
+    public void setGroupeSanguin(String groupeSanguin) {
+        this.groupeSanguin = groupeSanguin;
+    }
+
+    public Integer getMedecinId() {
+        return medecinId;
+    }
+
+    public void setMedecinId(Integer medecinId) {
+        this.medecinId = medecinId;
+    }
+
+    public String getStatut() {
+        return statut;
+    }
+
+    public void setStatut(String statut) {
+        this.statut = statut;
     }
 
     public Integer getUserId() {

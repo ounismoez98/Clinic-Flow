@@ -9,6 +9,7 @@ import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
 import java.util.List;
@@ -58,6 +59,18 @@ public class MedecinController {
             return ResponseEntity.notFound().build();
         }
         return ResponseEntity.noContent().build();
+    }
+
+    @GetMapping("/stats")
+    public ResponseEntity<MedecinStats> getStats() {
+        return ResponseEntity.ok(medecinService.getStats());
+    }
+
+    @GetMapping("/filter")
+    public ResponseEntity<List<Medecin>> filter(
+            @RequestParam(required = false) String statut,
+            @RequestParam(required = false) String specialite) {
+        return ResponseEntity.ok(medecinService.filter(statut, specialite));
     }
 
     @GetMapping("/{id}")

@@ -1,0 +1,74 @@
+{
+  "realm": "clinic-flow",
+  "enabled": true,
+  "sslRequired": "none",
+  "registrationAllowed": false,
+  "accessTokenLifespan": 1800,
+
+  "roles": {
+    "realm": [
+      { "name": "ADMIN", "description": "Administrator" },
+      { "name": "MEDECIN", "description": "Doctor" },
+      { "name": "PATIENT", "description": "Patient" }
+    ]
+  },
+
+  "clients": [
+    {
+      "clientId": "clinic-flow-frontend",
+      "name": "Clinic Flow Angular Frontend",
+      "enabled": true,
+      "publicClient": true,
+      "standardFlowEnabled": true,
+      "directAccessGrantsEnabled": true,
+      "redirectUris": [
+        "http://localhost:4200/*"
+      ],
+      "webOrigins": [
+        "http://localhost:4200"
+      ],
+      "attributes": {
+        "post.logout.redirect.uris": "http://localhost:4200/*"
+      }
+    }
+  ],
+
+  "users": [
+    {
+      "username": "admin",
+      "enabled": true,
+      "firstName": "Admin",
+      "lastName": "Clinic",
+      "email": "admin@clinicflow.local",
+      "emailVerified": true,
+      "credentials": [
+        { "type": "password", "value": "admin123", "temporary": false }
+      ],
+      "realmRoles": ["ADMIN"]
+    },
+    {
+      "username": "doctor",
+      "enabled": true,
+      "firstName": "Doctor",
+      "lastName": "Demo",
+      "email": "doctor@clinicflow.local",
+      "emailVerified": true,
+      "credentials": [
+        { "type": "password", "value": "doctor123", "temporary": false }
+      ],
+      "realmRoles": ["MEDECIN"]
+    },
+    {
+      "username": "patient",
+      "enabled": true,
+      "firstName": "Patient",
+      "lastName": "Demo",
+      "email": "patient@clinicflow.local",
+      "emailVerified": true,
+      "credentials": [
+        { "type": "password", "value": "patient123", "temporary": false }
+      ],
+      "realmRoles": ["PATIENT"]
+    }
+  ]
+}

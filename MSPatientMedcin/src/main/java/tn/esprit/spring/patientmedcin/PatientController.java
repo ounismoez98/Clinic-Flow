@@ -27,6 +27,20 @@ public class PatientController {
         return ResponseEntity.ok(patients);
     }
 
+    @GetMapping("/stats")
+    public ResponseEntity<PatientStats> getStats() {
+        return ResponseEntity.ok(patientService.getStats());
+    }
+
+    @GetMapping("/filter")
+    public ResponseEntity<List<Patient>> filter(
+            @RequestParam(required = false) String statut,
+            @RequestParam(required = false) String genre,
+            @RequestParam(required = false) String groupeSanguin,
+            @RequestParam(required = false) Integer medecinId) {
+        return ResponseEntity.ok(patientService.filter(statut, genre, groupeSanguin, medecinId));
+    }
+
     @GetMapping("/{id}")
     public ResponseEntity<Patient> getById(@PathVariable int id) {
         return patientService.getPatientById(id)
@@ -47,6 +61,15 @@ public class PatientController {
             return ResponseEntity.notFound().build();
         }
         return ResponseEntity.ok(updated);
+    }
+
+    @GetMapping("/{id}/details")
+    public ResponseEntity<PatientDetailsResponse> getDetails(@PathVariable int id) {
+        PatientDetailsResponse body = patientService.getPatientDetails(id);
+        if (body == null) {
+            return ResponseEntity.notFound().build();
+        }
+        return ResponseEntity.ok(body);
     }
 
     @GetMapping("/{id}/with-linked-account")

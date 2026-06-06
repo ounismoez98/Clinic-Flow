@@ -22,6 +22,10 @@ public class RabbitMqClinicPatientConfig {
 	public static final String PATIENT_USER_LINKED_ROUTING_KEY = "patient.user.linked";
 	public static final String PATIENT_USER_LINKED_QUEUE = "patient.user.linked.queue";
 
+	// Async "a patient event happened" -> MSNotification reacts.
+	public static final String PATIENT_EVENT_ROUTING_KEY = "patient.event";
+	public static final String PATIENT_EVENT_QUEUE = "patient.event.queue";
+
 	@Bean
 	public DirectExchange clinicPatientExchange() {
 		return new DirectExchange(CLINIC_PATIENT_EXCHANGE);
@@ -37,6 +41,20 @@ public class RabbitMqClinicPatientConfig {
 		return BindingBuilder.bind(patientUserLinkedQueue)
 				.to(clinicPatientExchange)
 				.with(PATIENT_USER_LINKED_ROUTING_KEY);
+	}
+
+	// Declare the patient-event queue + binding on the producer side too, so the
+	// message routes even if MSNotification starts later (otherwise it's dropped silently).
+	@Bean
+	public Queue patientEventQueue() {
+		return new Queue(PATIENT_EVENT_QUEUE);
+	}
+
+	@Bean
+	public Binding patientEventBinding(Queue patientEventQueue, DirectExchange clinicPatientExchange) {
+		return BindingBuilder.bind(patientEventQueue)
+				.to(clinicPatientExchange)
+				.with(PATIENT_EVENT_ROUTING_KEY);
 	}
 
 	@Bean

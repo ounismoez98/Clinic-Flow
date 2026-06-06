@@ -14,6 +14,9 @@ public class Medecin {
     private String prenom;
     private String email;
     private String specialite;
+    private String telephone;
+    private Integer experience;   // years of experience
+    private String statut;        // Available / In Consultation / Off Duty
     private Integer userId;
 
     public Medecin() {
@@ -72,6 +75,30 @@ public class Medecin {
 
     public void setSpecialite(String specialite) {
         this.specialite = specialite;
+    }
+
+    public String getTelephone() {
+        return telephone;
+    }
+
+    public void setTelephone(String telephone) {
+        this.telephone = telephone;
+    }
+
+    public Integer getExperience() {
+        return experience;
+    }
+
+    public void setExperience(Integer experience) {
+        this.experience = experience;
+    }
+
+    public String getStatut() {
+        return statut;
+    }
+
+    public void setStatut(String statut) {
+        this.statut = statut;
     }
 
     public Integer getUserId() {

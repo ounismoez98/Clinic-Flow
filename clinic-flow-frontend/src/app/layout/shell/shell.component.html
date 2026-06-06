@@ -64,17 +64,21 @@
 
     <!-- User card -->
     <div class="border-t border-gray-100 p-3">
-      <div class="flex items-center gap-3 px-2 py-2 rounded-xl hover:bg-gray-50 transition cursor-pointer">
+      <div class="flex items-center gap-3 px-2 py-2 rounded-xl hover:bg-gray-50 transition">
         <div class="w-8 h-8 rounded-lg bg-gradient-to-br from-blue-500 to-teal-500 flex items-center justify-center text-white text-xs font-bold flex-shrink-0">
-          {{ user.avatar }}
+          {{ currentUser.initials }}
         </div>
         <div *ngIf="!sidebarCollapsed" class="flex-1 min-w-0">
-          <p class="text-sm font-semibold text-gray-800 truncate">{{ user.name }}</p>
-          <p class="text-xs text-gray-400 truncate">{{ user.role }}</p>
+          <p class="text-sm font-semibold text-gray-800 truncate">{{ currentUser.name }}</p>
+          <p class="text-xs text-gray-400 truncate">{{ currentUser.email }}</p>
+          <span class="inline-block mt-1 text-[10px] font-bold text-blue-600 bg-blue-50 px-1.5 py-0.5 rounded-full uppercase tracking-wider">{{ currentUser.role }}</span>
         </div>
-        <svg *ngIf="!sidebarCollapsed" class="w-4 h-4 text-gray-400 flex-shrink-0" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
-          <path stroke-linecap="round" stroke-linejoin="round" d="M8.25 15 12 18.75 15.75 15m-7.5-6L12 5.25 15.75 9"/>
-        </svg>
+        <button *ngIf="!sidebarCollapsed" (click)="logout()" title="Log out"
+                class="p-1.5 rounded-lg text-gray-400 hover:text-red-600 hover:bg-red-50 transition flex-shrink-0">
+          <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" d="M15.75 9V5.25A2.25 2.25 0 0 0 13.5 3h-6a2.25 2.25 0 0 0-2.25 2.25v13.5A2.25 2.25 0 0 0 7.5 21h6a2.25 2.25 0 0 0 2.25-2.25V15m3 0 3-3m0 0-3-3m3 3H9"/>
+          </svg>
+        </button>
       </div>
     </div>
   </aside>
@@ -108,16 +112,58 @@
       <div class="flex-1"></div>
 
       <!-- Notifications -->
-      <button class="relative p-2 rounded-lg text-gray-500 hover:bg-gray-100 transition">
-        <svg class="w-5 h-5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
-          <path stroke-linecap="round" stroke-linejoin="round" d="M14.857 17.082a23.848 23.848 0 0 0 5.454-1.31A8.967 8.967 0 0 1 18 9.75V9A6 6 0 0 0 6 9v.75a8.967 8.967 0 0 1-2.312 6.022c1.733.64 3.56 1.085 5.455 1.31m5.714 0a24.255 24.255 0 0 1-5.714 0m5.714 0a3 3 0 1 1-5.714 0"/>
-        </svg>
-        <span class="absolute top-1.5 right-1.5 w-2 h-2 bg-blue-500 rounded-full"></span>
-      </button>
+      <div class="relative">
+        <button (click)="toggleNotifications()"
+                class="relative p-2 rounded-lg text-gray-500 hover:bg-gray-100 transition">
+          <svg class="w-5 h-5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" d="M14.857 17.082a23.848 23.848 0 0 0 5.454-1.31A8.967 8.967 0 0 1 18 9.75V9A6 6 0 0 0 6 9v.75a8.967 8.967 0 0 1-2.312 6.022c1.733.64 3.56 1.085 5.455 1.31m5.714 0a24.255 24.255 0 0 1-5.714 0m5.714 0a3 3 0 1 1-5.714 0"/>
+          </svg>
+          <span *ngIf="unread > 0"
+                class="absolute -top-0.5 -right-0.5 min-w-[18px] h-[18px] px-1 bg-red-500 text-white text-[10px] font-bold rounded-full flex items-center justify-center">
+            {{ unread > 9 ? '9+' : unread }}
+          </span>
+        </button>
 
-      <!-- Avatar -->
-      <div class="w-8 h-8 rounded-lg bg-gradient-to-br from-blue-500 to-teal-500 flex items-center justify-center text-white text-xs font-bold cursor-pointer">
-        DA
+        <!-- Dropdown -->
+        <div *ngIf="showNotifications"
+             class="absolute right-0 mt-2 w-80 bg-white border border-gray-100 rounded-2xl shadow-xl z-50 overflow-hidden">
+          <div class="flex items-center justify-between px-4 py-3 border-b border-gray-100">
+            <p class="font-bold text-gray-900 text-sm">Notifications</p>
+            <button *ngIf="notifications.length"
+                    (click)="markAllRead()"
+                    class="text-xs font-semibold text-blue-600 hover:text-blue-700">Mark all read</button>
+          </div>
+
+          <div class="max-h-96 overflow-y-auto">
+            <div *ngFor="let n of notifications"
+                 (click)="markRead(n)"
+                 class="flex gap-3 px-4 py-3 border-b border-gray-50 hover:bg-gray-50 cursor-pointer"
+                 [class.bg-blue-50]="!n.read">
+              <div class="w-2 h-2 mt-1.5 rounded-full flex-shrink-0"
+                   [class]="n.read ? 'bg-gray-300' : 'bg-blue-500'"></div>
+              <div class="min-w-0">
+                <p class="text-sm text-gray-800" [class.font-semibold]="!n.read">{{ n.message }}</p>
+                <p class="text-[11px] text-gray-400 mt-0.5">{{ n.type }} · {{ n.createdAt | date:'short' }}</p>
+              </div>
+            </div>
+
+            <div *ngIf="notifications.length === 0" class="px-4 py-10 text-center text-gray-400 text-sm">
+              No notifications yet.
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Avatar + name/role -->
+      <div class="flex items-center gap-2.5">
+        <div class="hidden sm:block text-right leading-tight">
+          <p class="text-sm font-semibold text-gray-800">{{ currentUser.name }}</p>
+          <p class="text-[11px] text-gray-400">{{ currentUser.role }}</p>
+        </div>
+        <div class="w-8 h-8 rounded-lg bg-gradient-to-br from-blue-500 to-teal-500 flex items-center justify-center text-white text-xs font-bold"
+             [title]="currentUser.email">
+          {{ currentUser.initials }}
+        </div>
       </div>
     </header>
 

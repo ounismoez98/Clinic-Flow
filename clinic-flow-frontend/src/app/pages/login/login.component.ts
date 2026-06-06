@@ -2,6 +2,7 @@ import { Component } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { Router } from '@angular/router';
+import { KeycloakService } from 'keycloak-angular';
 
 @Component({
   selector: 'app-login',
@@ -23,14 +24,21 @@ export class LoginComponent {
     { key: 'staff', label: 'Staff' },
   ];
 
-  constructor(private router: Router) {}
+  constructor(private router: Router, private keycloak: KeycloakService) {}
 
+  /**
+   * Redirect to the Keycloak login page. After a successful login Keycloak
+   * sends the user back to /dashboard/patients with a valid token in place.
+   */
   onSubmit() {
     this.loading = true;
-    setTimeout(() => {
-      this.loading = false;
-      this.router.navigate(['/dashboard/patients']);
-    }, 1200);
+    this.keycloak.login({
+      redirectUri: window.location.origin + '/dashboard/patients',
+    });
+  }
+
+  logout() {
+    this.keycloak.logout(window.location.origin + '/login');
   }
 
   togglePassword() {

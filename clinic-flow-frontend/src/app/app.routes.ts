@@ -5,6 +5,7 @@ import { ShellComponent } from './layout/shell/shell.component';
 import { PatientsComponent } from './pages/patients/patients.component';
 import { DoctorsComponent } from './pages/doctors/doctors.component';
 import { FacturesComponent } from './pages/factures/factures.component';
+import { authGuard } from './auth/auth.guard';
 
 export const routes: Routes = [
   { path: '', component: HomeComponent },
@@ -12,6 +13,7 @@ export const routes: Routes = [
   {
     path: 'dashboard',
     component: ShellComponent,
+    canActivate: [authGuard],
     children: [
       { path: '', redirectTo: 'patients', pathMatch: 'full' },
       { path: 'patients', component: PatientsComponent },

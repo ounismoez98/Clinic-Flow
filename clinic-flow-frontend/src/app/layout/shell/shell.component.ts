@@ -1,6 +1,9 @@
-import { Component } from '@angular/core';
+import { Component, OnInit, OnDestroy } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { RouterOutlet, RouterLink, RouterLinkActive } from '@angular/router';
+import { interval, Subscription } from 'rxjs';
+import { NotificationService, AppNotification } from '../../core/notification.service';
+import { CurrentUserService, CurrentUser } from '../../auth/current-user.service';
 
 @Component({
   selector: 'app-shell',
@@ -9,8 +12,65 @@ import { RouterOutlet, RouterLink, RouterLinkActive } from '@angular/router';
   templateUrl: './shell.component.html',
   styleUrl: './shell.component.scss'
 })
-export class ShellComponent {
+export class ShellComponent implements OnInit, OnDestroy {
   sidebarCollapsed = false;
+
+  // Notifications (bell)
+  notifications: AppNotification[] = [];
+  unread = 0;
+  showNotifications = false;
+  private pollSub?: Subscription;
+
+  // The logged-in user, read from the Keycloak token.
+  currentUser: CurrentUser = { name: 'User', username: '', email: '', role: 'USER', initials: 'U' };
+
+  constructor(
+    private notificationService: NotificationService,
+    private currentUserService: CurrentUserService
+  ) {}
+
+  ngOnInit(): void {
+    this.currentUser = this.currentUserService.get();
+    this.refreshUnread();
+    // Poll the unread badge every 15s so new events appear without a page reload.
+    this.pollSub = interval(15000).subscribe(() => this.refreshUnread());
+  }
+
+  ngOnDestroy(): void {
+    this.pollSub?.unsubscribe();
+  }
+
+  refreshUnread(): void {
+    this.notificationService.unreadCount().subscribe({
+      next: (c) => (this.unread = c),
+      error: () => {},   // not logged in / gateway down -> just leave badge as-is
+    });
+  }
+
+  toggleNotifications(): void {
+    this.showNotifications = !this.showNotifications;
+    if (this.showNotifications) {
+      this.notificationService.getAll().subscribe({
+        next: (list) => (this.notifications = list ?? []),
+        error: () => (this.notifications = []),
+      });
+    }
+  }
+
+  markRead(n: AppNotification): void {
+    if (n.read) return;
+    this.notificationService.markRead(n.id).subscribe(() => {
+      n.read = true;
+      this.refreshUnread();
+    });
+  }
+
+  markAllRead(): void {
+    this.notificationService.markAllRead().subscribe(() => {
+      this.notifications.forEach((n) => (n.read = true));
+      this.unread = 0;
+    });
+  }
 
   navGroups = [
     {
@@ -38,13 +98,11 @@ export class ShellComponent {
     }
   ];
 
-  user = {
-    name: 'Dr. Admin',
-    role: 'Administrator',
-    avatar: 'DA'
-  };
-
   toggleSidebar() {
     this.sidebarCollapsed = !this.sidebarCollapsed;
+  }
+
+  logout() {
+    this.currentUserService.logout();
   }
 }
