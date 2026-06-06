@@ -6,6 +6,7 @@ import { PatientsComponent } from './pages/patients/patients.component';
 import { DoctorsComponent } from './pages/doctors/doctors.component';
 import { FacturesComponent } from './pages/factures/factures.component';
 import { PharmacyComponent } from './pages/pharmacy/pharmacy.component';
+import { AppointmentsComponent } from './pages/appointments/appointments.component';
 import { authGuard } from './auth/auth.guard';
 
 export const routes: Routes = [
@@ -21,6 +22,7 @@ export const routes: Routes = [
       { path: 'doctors', component: DoctorsComponent },
       { path: 'factures', component: FacturesComponent },
       { path: 'pharmacy', component: PharmacyComponent },
+      { path: 'appointments', component: AppointmentsComponent },
     ]
   },
   { path: '**', redirectTo: '' }
