@@ -8,11 +8,11 @@
     Run from the Clinic-Flow repo root (same folder as docker-compose.yml).
     Requires JDK 17 and Docker Desktop when using Docker services.
 
-    Only RabbitMQ + MySQL are started in Docker; microservices run locally via mvnw.
-    Host ports must match docker-compose.yml (default RabbitMQ 5673, MySQL 3307).
+    Only RabbitMQ, MySQL and Keycloak are started in Docker; microservices run locally via mvnw.
+    Host ports must match docker-compose.yml (RabbitMQ 5673, MySQL 3307, Keycloak 8180).
 
 .PARAMETER SkipDocker
-    Do not run docker compose (use when Rabbit/MySQL already running).
+    Do not run docker compose (use when Rabbit/MySQL/Keycloak already running).
 
 .PARAMETER SkipPatient
     Do not start MSPatientMedcin (skip if you only test catalogue / ordonnances without dispense).
@@ -21,7 +21,16 @@
     Do not start MsFacture.
 
 .PARAMETER SkipRendezVous
-    Do not start MSRendezVous (runs on host port 8088 to avoid clashing with MSOrdonnance on 8081).
+    Do not start MSRendezVous (host port 8088 — avoids clashing with MSOrdonnance on 8081).
+
+.PARAMETER SkipNotification
+    Do not start MSNotification (host port 8089 — avoids clashing with MSPharmacie on 8086).
+
+.PARAMETER SkipKeycloak
+    Do not start Keycloak containers (only applies when Docker infra is started by this script).
+
+.PARAMETER KeycloakPort
+    Host port mapped to Keycloak (docker-compose default: 8180).
 
 .PARAMETER JavaHome
     Absolute path to a JDK 17+ install (folder that contains bin\java.exe). Use this when java -version still shows Java 8.
@@ -53,8 +62,11 @@
 .EXAMPLE
     .\run-all-services.ps1 -JavaHome "C:\Program Files\Eclipse Adoptium\jdk-17.0.13.11-hotspot"
 
+.PARAMETER StartFrontend
+    After microservices, open a window running `npm start` in clinic-flow-frontend.
+
 .EXAMPLE
-    .\run-all-services.ps1 -MySqlPort 3306 -RabbitMqPort 5673
+    .\run-all-services.ps1 -StartFrontend
 #>
 
 param(
@@ -62,9 +74,13 @@ param(
     [switch] $SkipPatient,
     [switch] $SkipFacture,
     [switch] $SkipRendezVous,
+    [switch] $SkipNotification,
+    [switch] $SkipKeycloak,
+    [switch] $StartFrontend,
     [string] $JavaHome = "",
     [int] $RabbitMqPort = 5673,
     [int] $MySqlPort = 3307,
+    [int] $KeycloakPort = 8180,
     [int] $WaitTimeoutSec = 120,
     [switch] $WaitAll,
     [int] $StaggerSec = 2,
@@ -93,6 +109,8 @@ function Get-JavaBootstrapLines {
 function Get-RabbitMqEnvLines {
     param([int] $Port)
     return @(
+        "`$env:SPRING_RABBITMQ_HOST = 'localhost'",
+        "`$env:RABBITMQ_HOST = 'localhost'",
         "`$env:SPRING_RABBITMQ_PORT = '$Port'",
         "`$env:RABBITMQ_PORT = '$Port'"
     )
@@ -128,6 +146,32 @@ function Get-RendezVousEnvLines {
         "`$env:SPRING_DATASOURCE_URL = 'jdbc:h2:mem:rendezvous_local;DB_CLOSE_DELAY=-1;DB_CLOSE_ON_EXIT=FALSE'",
         "`$env:SPRING_DATASOURCE_USERNAME = 'Moez'",
         "`$env:SPRING_DATASOURCE_PASSWORD = ''"
+    )
+}
+
+function Get-NotificationEnvLines {
+    param([int] $Port = 8089)
+    # MSNotification defaults to 8086 in its properties — override to avoid MSPharmacie clash.
+    return @(
+        "`$env:SERVER_PORT = '$Port'",
+        "`$env:SPRING_DATASOURCE_URL = 'jdbc:h2:file:./Database/Data/ClinicNotification;DB_CLOSE_ON_EXIT=FALSE'",
+        "`$env:SPRING_DATASOURCE_USERNAME = 'sa'",
+        "`$env:SPRING_DATASOURCE_PASSWORD = ''"
+    )
+}
+
+function Get-KeycloakGatewayEnvLines {
+    param([int] $Port = 8180)
+    return @("`$env:KEYCLOAK_ISSUER_URI = 'http://localhost:$Port/realms/clinic-flow'")
+}
+
+function Get-KeycloakPatientEnvLines {
+    param([int] $Port = 8180)
+    return @(
+        "`$env:KEYCLOAK_ADMIN_BASE_URL = 'http://localhost:$Port'",
+        "`$env:KEYCLOAK_ADMIN_REALM = 'clinic-flow'",
+        "`$env:KEYCLOAK_ADMIN_USERNAME = 'admin'",
+        "`$env:KEYCLOAK_ADMIN_PASSWORD = 'admin'"
     )
 }
 
@@ -429,6 +473,9 @@ $rabbitEnvLines = Get-RabbitMqEnvLines -Port $RabbitMqPort
 $mysqlPharmacieEnvLines = Get-MySqlPharmacieEnvLines -Port $MySqlPort
 $mysqlFactureEnvLines = Get-MySqlFactureEnvLines -Port $MySqlPort
 $geminiEnvLines = Get-GeminiApiKeyEnvLines -RepoRootPath $RepoRoot
+$keycloakGatewayEnvLines = Get-KeycloakGatewayEnvLines -Port $KeycloakPort
+$keycloakPatientEnvLines = Get-KeycloakPatientEnvLines -Port $KeycloakPort
+$notificationEnvLines = Get-NotificationEnvLines -Port 8089
 
 $servicePlan = @(
     @{
@@ -477,8 +524,17 @@ $servicePlan = @(
         TcpPort = 8082
         ActuatorUrls = @("http://127.0.0.1:8082/actuator/health")
         FallbackUrls = @("http://127.0.0.1:8082/medecins/hello", "http://127.0.0.1:8082/patients")
-        ExtraEnvLines = $rabbitEnvLines
+        ExtraEnvLines = ($rabbitEnvLines + $keycloakPatientEnvLines)
         Skip = $SkipPatient
+    },
+    @{
+        DisplayName = "MSNotification"
+        RelativeModulePath = "MSNotification"
+        TcpPort = 8089
+        ActuatorUrls = @()
+        FallbackUrls = @("http://127.0.0.1:8089/notifications")
+        ExtraEnvLines = ($rabbitEnvLines + $notificationEnvLines)
+        Skip = $SkipNotification
     },
     @{
         DisplayName = "MsFacture"
@@ -504,7 +560,7 @@ $servicePlan = @(
         TcpPort = 8085
         ActuatorUrls = @("http://127.0.0.1:8085/actuator/health")
         FallbackUrls = @("http://127.0.0.1:8085/", "http://127.0.0.1:8085/medecins/hello")
-        ExtraEnvLines = @()
+        ExtraEnvLines = $keycloakGatewayEnvLines
     }
 )
 
@@ -513,10 +569,14 @@ $totalSteps = $activeServices.Count
 
 if (-not $SkipDocker) {
     Write-Host ""
-    Write-Host "[Docker] Starting infra (rabbitmq + mysql)..." -ForegroundColor Cyan
+    $dockerServices = @("rabbitmq", "mysql")
+    if (-not $SkipKeycloak) {
+        $dockerServices += @("keycloak-db", "keycloak")
+    }
+    Write-Host "[Docker] Starting infra ($($dockerServices -join ', '))..." -ForegroundColor Cyan
     Push-Location $RepoRoot
     try {
-        docker compose up -d rabbitmq mysql
+        docker compose up -d @dockerServices
     }
     finally {
         Pop-Location
@@ -524,6 +584,12 @@ if (-not $SkipDocker) {
     if (-not $SkipWait) {
         Wait-TcpOpen -Port $RabbitMqPort -Description "RabbitMQ AMQP" -TimeoutSec 60 -IntervalSec 1
         Wait-TcpOpen -Port $MySqlPort -Description "MySQL" -TimeoutSec 90 -IntervalSec 1
+        if (-not $SkipKeycloak) {
+            Wait-TcpOpen -Port $KeycloakPort -Description "Keycloak" -TimeoutSec 120 -IntervalSec 2
+            Wait-HttpReady -Description "Keycloak realm" -Urls @(
+                "http://127.0.0.1:$KeycloakPort/realms/clinic-flow/.well-known/openid-configuration"
+            ) -TimeoutSec 180 -IntervalSec 3
+        }
     }
     else {
         Write-Host "SkipWait: assuming Docker ports are already accepting connections." -ForegroundColor DarkYellow
@@ -576,16 +642,39 @@ foreach ($svc in $activeServices) {
 Write-Host ""
 Write-Host "Done. Services are running locally." -ForegroundColor Green
 Write-Host "  Eureka dashboard   : http://localhost:8761" -ForegroundColor Green
+Write-Host "  Keycloak admin     : http://localhost:$KeycloakPort  (admin / admin)" -ForegroundColor Green
 Write-Host "  RabbitMQ dashboard : http://localhost:15673  (guest/guest)" -ForegroundColor Green
-Write-Host "  Gateway            : http://localhost:8085" -ForegroundColor Green
+Write-Host "  Gateway            : http://localhost:8085  (JWT required except /welcome-message)" -ForegroundColor Green
 Write-Host ""
-Write-Host "  Test via Gateway:" -ForegroundColor White
+Write-Host "  Frontend (separate): cd clinic-flow-frontend; npm start  -> http://localhost:4200" -ForegroundColor White
+Write-Host ""
+Write-Host "  Test via Gateway (Bearer token from Keycloak login):" -ForegroundColor White
 Write-Host "    GET http://localhost:8085/medicaments" -ForegroundColor Gray
 Write-Host "    GET http://localhost:8085/ordonnances" -ForegroundColor Gray
 Write-Host "    GET http://localhost:8085/patients" -ForegroundColor Gray
 Write-Host "    GET http://localhost:8085/users" -ForegroundColor Gray
 Write-Host "    GET http://localhost:8085/factures" -ForegroundColor Gray
+Write-Host "    GET http://localhost:8085/notifications" -ForegroundColor Gray
 Write-Host "    GET http://localhost:8085/rendezvous/hello" -ForegroundColor Gray
 Write-Host ""
 Write-Host "Close each PowerShell window (or Ctrl+C) to stop a service." -ForegroundColor Gray
-Write-Host "Docker infra: docker compose stop rabbitmq mysql  (from repo root)" -ForegroundColor Gray
+Write-Host "Docker infra: docker compose stop rabbitmq mysql keycloak keycloak-db  (from repo root)" -ForegroundColor Gray
+
+if ($StartFrontend) {
+    $frontendPath = Join-Path $RepoRoot "clinic-flow-frontend"
+    if (Test-Path (Join-Path $frontendPath "package.json")) {
+        Write-Host ""
+        Write-Host "Starting Angular frontend..." -ForegroundColor Cyan
+        $feCmd = @"
+Set-Location -LiteralPath '$frontendPath'
+`$Host.UI.RawUI.WindowTitle = 'Clinic-Flow Frontend'
+Write-Host '=== clinic-flow-frontend (ng serve) ===' -ForegroundColor Cyan
+npm start
+"@
+        Start-Process powershell.exe -ArgumentList @("-NoExit", "-Command", $feCmd) | Out-Null
+        Write-Host "  Frontend window opened -> http://localhost:4200" -ForegroundColor Green
+    }
+    else {
+        Write-Warning "clinic-flow-frontend not found - skipped -StartFrontend."
+    }
+}
