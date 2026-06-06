@@ -1,3 +1,4 @@
+import { HttpRequest } from '@angular/common/http';
 import { KeycloakService } from 'keycloak-angular';
 import { keycloakConfig } from './keycloak.config';
 
@@ -10,16 +11,23 @@ import { keycloakConfig } from './keycloak.config';
  */
 export function initializeKeycloak(keycloak: KeycloakService): () => Promise<boolean> {
   return () =>
-    keycloak.init({
-      config: keycloakConfig,
-      initOptions: {
-        onLoad: 'check-sso',
-        silentCheckSsoRedirectUri:
-          window.location.origin + '/assets/silent-check-sso.html',
-        checkLoginIframe: false,
-      },
-      // Auto-attach the token only to API gateway calls.
-      enableBearerInterceptor: true,
-      shouldAddToken: (req) => req.url.startsWith('http://localhost:8085'),
-    });
+    keycloak
+      .init({
+        config: keycloakConfig,
+        initOptions: {
+          onLoad: 'check-sso',
+          silentCheckSsoRedirectUri:
+            window.location.origin + '/assets/silent-check-sso.html',
+          checkLoginIframe: false,
+        },
+        enableBearerInterceptor: true,
+        shouldAddToken: (req: HttpRequest<unknown>) => req.url.startsWith('http://localhost:8085'),
+      })
+      .catch(err => {
+        console.warn(
+          'Keycloak unavailable (start Docker Keycloak on :8180 or run run-all-services.ps1). App loads without SSO.',
+          err
+        );
+        return false;
+      });
 }

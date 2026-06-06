@@ -36,6 +36,7 @@ public class RestExceptionHandler {
 	}
 
 	/** When patient service is down or Eureka has no instance — {@code MedicamentService} rethrows non-404 Feign errors. */
+	@ExceptionHandler(FeignException.class)
 	public ResponseEntity<String> handleFeign(FeignException ex) {
 		if (ex.status() == 404) {
 			return ResponseEntity.status(HttpStatus.NOT_FOUND).body("Patient introuvable (réponse 404 du service patient).");

@@ -1,0 +1,86 @@
+# Standalone MSPharmacie stack (MySQL + RabbitMQ + service).
+# Run from this folder:  docker compose up --build
+#
+# Direct API:  http://localhost:8086/medicaments
+# RabbitMQ UI: http://localhost:15673  (guest / guest)
+# MySQL:       localhost:3307  (root / root, database clinic_pharmacie)
+#
+# For Eureka, Config Server, Gateway and other microservices, use the root
+# docker-compose.yml at the Clinic-Flow repo root.
+
+name: mspharmacie-standalone
+
+services:
+  mysql:
+    image: mysql:8.0
+    container_name: mspharmacie-mysql
+    ports:
+      - "3307:3306"
+    environment:
+      MYSQL_ROOT_PASSWORD: root
+      MYSQL_DATABASE: clinic_pharmacie
+    volumes:
+      - mspharmacie_mysql_data:/var/lib/mysql
+    healthcheck:
+      test: ["CMD", "mysqladmin", "ping", "-h", "127.0.0.1", "-uroot", "-proot"]
+      interval: 5s
+      timeout: 5s
+      retries: 12
+      start_period: 40s
+    networks:
+      - mspharmacie-network
+
+  rabbitmq:
+    image: rabbitmq:3-management
+    container_name: mspharmacie-rabbitmq
+    ports:
+      - "5673:5672"
+      - "15673:15672"
+    environment:
+      RABBITMQ_DEFAULT_USER: guest
+      RABBITMQ_DEFAULT_PASS: guest
+    healthcheck:
+      test: ["CMD", "rabbitmq-diagnostics", "-q", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 20s
+    networks:
+      - mspharmacie-network
+
+  ms-pharmacie:
+    build: .
+    container_name: ms-pharmacie
+    ports:
+      - "8086:8086"
+    environment:
+      SPRING_CLOUD_CONFIG_ENABLED: "false"
+      EUREKA_CLIENT_ENABLED: "false"
+      RABBITMQ_HOST: rabbitmq
+      RABBITMQ_PORT: "5672"
+      RABBITMQ_USERNAME: guest
+      RABBITMQ_PASSWORD: guest
+      SPRING_DATASOURCE_URL: jdbc:mysql://mysql:3306/clinic_pharmacie?useSSL=false&allowPublicKeyRetrieval=true&serverTimezone=UTC
+      SPRING_DATASOURCE_USERNAME: root
+      SPRING_DATASOURCE_PASSWORD: root
+      GEMINI_API_KEY: ${GEMINI_API_KEY:-}
+    depends_on:
+      mysql:
+        condition: service_healthy
+      rabbitmq:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8086/actuator/health"]
+      interval: 15s
+      timeout: 5s
+      retries: 12
+      start_period: 120s
+    networks:
+      - mspharmacie-network
+
+volumes:
+  mspharmacie_mysql_data:
+
+networks:
+  mspharmacie-network:
+    driver: bridge

@@ -25,5 +25,7 @@ public interface IMedicamentService {
 
 	MedicamentResponseDto dispense(int medicamentId, DispenseRequestDto request);
 
+	void delete(int id);
+
 	void applyOrdonnanceStockConsumption(int medicamentId, int quantity);
 }

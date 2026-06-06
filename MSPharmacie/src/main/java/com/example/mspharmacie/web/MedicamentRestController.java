@@ -4,6 +4,7 @@ import java.util.List;
 
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PatchMapping;
 import org.springframework.web.bind.annotation.PathVariable;
@@ -80,5 +81,11 @@ public class MedicamentRestController {
 	@PostMapping("/{id}/dispense")
 	public MedicamentResponseDto dispense(@PathVariable int id, @Valid @RequestBody DispenseRequestDto body) {
 		return medicamentService.dispense(id, body);
+	}
+
+	@DeleteMapping("/{id}")
+	public ResponseEntity<Void> delete(@PathVariable int id) {
+		medicamentService.delete(id);
+		return ResponseEntity.noContent().build();
 	}
 }

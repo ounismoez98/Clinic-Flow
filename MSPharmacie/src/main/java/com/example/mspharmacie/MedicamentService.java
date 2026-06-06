@@ -122,6 +122,15 @@ public class MedicamentService implements IMedicamentService {
 
 	@Override
 	@Transactional
+	public void delete(int id) {
+		if (!medicamentRepository.existsById(id)) {
+			throw new MedicamentNotFoundException(id);
+		}
+		medicamentRepository.deleteById(id);
+	}
+
+	@Override
+	@Transactional
 	public void applyOrdonnanceStockConsumption(int medicamentId, int quantity) {
 		Medicament m = medicamentRepository.findById(medicamentId).orElse(null);
 		if (m == null) {

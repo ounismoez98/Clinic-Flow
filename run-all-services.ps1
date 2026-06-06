@@ -1,22 +1,54 @@
 <#
 .SYNOPSIS
-    Starts Docker infra (optional), then launches services in order and waits until each one is reachable before starting the next.
+    Starts Docker infra (optional), then launches microservices.
+    By default only Eureka, Config Server and API Gateway are waited on; other services
+    start in quick succession (use -WaitAll for the old strict one-by-one readiness wait).
 
 .DESCRIPTION
     Run from the Clinic-Flow repo root (same folder as docker-compose.yml).
     Requires JDK 17 and Docker Desktop when using Docker services.
 
+    Only RabbitMQ, MySQL and Keycloak are started in Docker; microservices run locally via mvnw.
+    Host ports must match docker-compose.yml (RabbitMQ 5673, MySQL 3307, Keycloak 8180).
+
 .PARAMETER SkipDocker
-    Do not run docker compose (use when Rabbit/MySQL already running).
+    Do not run docker compose (use when Rabbit/MySQL/Keycloak already running).
 
 .PARAMETER SkipPatient
     Do not start MSPatientMedcin (skip if you only test catalogue / ordonnances without dispense).
 
+.PARAMETER SkipFacture
+    Do not start MsFacture.
+
+.PARAMETER SkipRendezVous
+    Do not start MSRendezVous (host port 8088 — avoids clashing with MSOrdonnance on 8081).
+
+.PARAMETER SkipNotification
+    Do not start MSNotification (host port 8089 — avoids clashing with MSPharmacie on 8086).
+
+.PARAMETER SkipKeycloak
+    Do not start Keycloak containers (only applies when Docker infra is started by this script).
+
+.PARAMETER KeycloakPort
+    Host port mapped to Keycloak (docker-compose default: 8180).
+
 .PARAMETER JavaHome
     Absolute path to a JDK 17+ install (folder that contains bin\java.exe). Use this when java -version still shows Java 8.
 
+.PARAMETER RabbitMqPort
+    Host port mapped to RabbitMQ AMQP (docker-compose default: 5673).
+
+.PARAMETER MySqlPort
+    Host port mapped to MySQL (docker-compose default: 3307).
+
 .PARAMETER WaitTimeoutSec
-    Max seconds to wait for each readiness probe after a window is started (default 240).
+    Max seconds to wait for a service readiness probe (default 120).
+
+.PARAMETER WaitAll
+    Wait until each service is fully ready before starting the next one (slower, old behavior).
+
+.PARAMETER StaggerSec
+    Seconds between launching non-critical services in fast mode (default 2).
 
 .PARAMETER SkipWait
     Skip HTTP/TCP readiness polling; only opens windows (not recommended).
@@ -30,17 +62,32 @@
 .EXAMPLE
     .\run-all-services.ps1 -JavaHome "C:\Program Files\Eclipse Adoptium\jdk-17.0.13.11-hotspot"
 
+.PARAMETER StartFrontend
+    After microservices, open a window running `npm start` in clinic-flow-frontend.
+
 .EXAMPLE
-    .\run-all-services.ps1 -WaitTimeoutSec 360
+    .\run-all-services.ps1 -StartFrontend
 #>
 
 param(
     [switch] $SkipDocker,
     [switch] $SkipPatient,
+    [switch] $SkipFacture,
+    [switch] $SkipRendezVous,
+    [switch] $SkipNotification,
+    [switch] $SkipKeycloak,
+    [switch] $StartFrontend,
     [string] $JavaHome = "",
-    [int] $WaitTimeoutSec = 240,
+    [int] $RabbitMqPort = 5673,
+    [int] $MySqlPort = 3307,
+    [int] $KeycloakPort = 8180,
+    [int] $WaitTimeoutSec = 120,
+    [switch] $WaitAll,
+    [int] $StaggerSec = 2,
     [switch] $SkipWait
 )
+
+$CriticalWaitServices = @('Eureka', 'ConfigServer', 'ApiGateway')
 
 $ErrorActionPreference = "Stop"
 $RepoRoot = $PSScriptRoot
@@ -52,7 +99,6 @@ function Get-JavaBootstrapLines {
     if (-not (Test-Path $javaExe)) {
         throw "JAVA_HOME invalid (missing bin\java.exe): $jh"
     }
-    # Escape single quotes for embedding in single-quoted segments of child script
     $jhEsc = $jh -replace "'", "''"
     return @(
         "`$env:JAVA_HOME = '$jhEsc'",
@@ -60,28 +106,138 @@ function Get-JavaBootstrapLines {
     )
 }
 
+function Get-RabbitMqEnvLines {
+    param([int] $Port)
+    return @(
+        "`$env:SPRING_RABBITMQ_HOST = 'localhost'",
+        "`$env:RABBITMQ_HOST = 'localhost'",
+        "`$env:SPRING_RABBITMQ_PORT = '$Port'",
+        "`$env:RABBITMQ_PORT = '$Port'"
+    )
+}
+
+function Get-MySqlPharmacieEnvLines {
+    param([int] $Port)
+    $url = "jdbc:mysql://localhost:$Port/clinic_pharmacie?useSSL=false&allowPublicKeyRetrieval=true&serverTimezone=UTC"
+    $urlEsc = $url -replace "'", "''"
+    return @(
+        "`$env:SPRING_DATASOURCE_URL = '$urlEsc'",
+        "`$env:SPRING_DATASOURCE_USERNAME = 'root'",
+        "`$env:SPRING_DATASOURCE_PASSWORD = 'root'"
+    )
+}
+
+function Get-MySqlFactureEnvLines {
+    param([int] $Port)
+    $url = "jdbc:mysql://localhost:$Port/clinique?createDatabaseIfNotExist=true&serverTimezone=UTC"
+    $urlEsc = $url -replace "'", "''"
+    return @(
+        "`$env:SPRING_DATASOURCE_URL = '$urlEsc'",
+        "`$env:SPRING_DATASOURCE_USERNAME = 'root'",
+        "`$env:SPRING_DATASOURCE_PASSWORD = 'root'"
+    )
+}
+
+function Get-RendezVousEnvLines {
+    # In-memory H2 for the local launcher — avoids stale file DB credential mismatches.
+    # Credentials must match MSRendezVous application.properties (username Moez, empty password).
+    return @(
+        "`$env:SERVER_PORT = '8088'",
+        "`$env:SPRING_DATASOURCE_URL = 'jdbc:h2:mem:rendezvous_local;DB_CLOSE_DELAY=-1;DB_CLOSE_ON_EXIT=FALSE'",
+        "`$env:SPRING_DATASOURCE_USERNAME = 'Moez'",
+        "`$env:SPRING_DATASOURCE_PASSWORD = ''"
+    )
+}
+
+function Get-NotificationEnvLines {
+    param([int] $Port = 8089)
+    # MSNotification defaults to 8086 in its properties — override to avoid MSPharmacie clash.
+    return @(
+        "`$env:SERVER_PORT = '$Port'",
+        "`$env:SPRING_DATASOURCE_URL = 'jdbc:h2:file:./Database/Data/ClinicNotification;DB_CLOSE_ON_EXIT=FALSE'",
+        "`$env:SPRING_DATASOURCE_USERNAME = 'sa'",
+        "`$env:SPRING_DATASOURCE_PASSWORD = ''"
+    )
+}
+
+function Get-KeycloakGatewayEnvLines {
+    param([int] $Port = 8180)
+    return @("`$env:KEYCLOAK_ISSUER_URI = 'http://localhost:$Port/realms/clinic-flow'")
+}
+
+function Get-KeycloakPatientEnvLines {
+    param([int] $Port = 8180)
+    return @(
+        "`$env:KEYCLOAK_ADMIN_BASE_URL = 'http://localhost:$Port'",
+        "`$env:KEYCLOAK_ADMIN_REALM = 'clinic-flow'",
+        "`$env:KEYCLOAK_ADMIN_USERNAME = 'admin'",
+        "`$env:KEYCLOAK_ADMIN_PASSWORD = 'admin'"
+    )
+}
+
+function Get-OrdonnanceH2EnvLines {
+    # Prevent MySQL SPRING_DATASOURCE_* vars (from shell profile) overriding H2 credentials.
+    return @(
+        "`$env:SPRING_DATASOURCE_USERNAME = 'Maroua'",
+        "`$env:SPRING_DATASOURCE_PASSWORD = ''"
+    )
+}
+
+function Get-GeminiApiKeyEnvLines {
+    param([string] $RepoRootPath)
+
+    $key = $env:GEMINI_API_KEY
+    if ([string]::IsNullOrWhiteSpace($key)) {
+        $envFile = Join-Path $RepoRootPath ".env"
+        if (Test-Path $envFile) {
+            foreach ($line in Get-Content $envFile -ErrorAction SilentlyContinue) {
+                if ($line -match '^\s*GEMINI_API_KEY\s*=\s*(.+)\s*$') {
+                    $key = $Matches[1].Trim().Trim('"').Trim("'")
+                    break
+                }
+            }
+        }
+    }
+
+    if ([string]::IsNullOrWhiteSpace($key)) {
+        return @()
+    }
+
+    $keyEsc = $key -replace "'", "''"
+    return @("`$env:GEMINI_API_KEY = '$keyEsc'")
+}
+
 function Start-MicroserviceWindow {
     param(
         [Parameter(Mandatory = $true)][string] $DisplayName,
         [Parameter(Mandatory = $true)][string] $RelativeModulePath,
-        [string[]] $JavaBootstrapLines = @()
+        [string[]] $JavaBootstrapLines = @(),
+        [string[]] $ExtraEnvLines = @()
     )
 
     $moduleFullPath = Join-Path $RepoRoot $RelativeModulePath
     if (-not (Test-Path $moduleFullPath)) {
         Write-Warning "Skipped (path not found): $RelativeModulePath"
-        return
+        return $false
     }
 
     $mvnw = Join-Path $moduleFullPath "mvnw.cmd"
     if (-not (Test-Path $mvnw)) {
         Write-Warning "Skipped (no mvnw.cmd): $RelativeModulePath"
-        return
+        return $false
+    }
+
+    $prefixLines = @()
+    if ($JavaBootstrapLines.Count -gt 0) {
+        $prefixLines += $JavaBootstrapLines
+    }
+    if ($ExtraEnvLines.Count -gt 0) {
+        $prefixLines += $ExtraEnvLines
     }
 
     $prefix = ""
-    if ($JavaBootstrapLines.Count -gt 0) {
-        $prefix = ($JavaBootstrapLines -join "`n") + "`n"
+    if ($prefixLines.Count -gt 0) {
+        $prefix = ($prefixLines -join "`n") + "`n"
     }
 
     $command = @"
@@ -89,12 +245,131 @@ $prefix
 Set-Location -LiteralPath '$moduleFullPath'
 `$Host.UI.RawUI.WindowTitle = '$DisplayName'
 Write-Host '=== $DisplayName ===' -ForegroundColor Cyan
-Write-Host "JAVA_HOME=`$env:JAVA_HOME"
-java -version
 .\mvnw.cmd spring-boot:run
 "@
     Start-Process powershell.exe -ArgumentList @("-NoExit", "-Command", $command) | Out-Null
-    Write-Host "Started window: $DisplayName"
+    Write-Host "  Started window: $DisplayName" -ForegroundColor White
+    return $true
+}
+
+function Test-TcpOpenFast {
+    param(
+        [string] $ComputerName = "127.0.0.1",
+        [Parameter(Mandatory)][int] $Port,
+        [int] $TimeoutMs = 600
+    )
+    $client = $null
+    try {
+        $client = [System.Net.Sockets.TcpClient]::new()
+        $task = $client.ConnectAsync($ComputerName, $Port)
+        if (-not $task.Wait($TimeoutMs)) {
+            return $false
+        }
+        return $client.Connected
+    }
+    catch {
+        return $false
+    }
+    finally {
+        if ($null -ne $client) {
+            $client.Dispose()
+        }
+    }
+}
+
+function Test-SpringActuatorUp {
+    param(
+        [Parameter(Mandatory)][string]$Uri,
+        [int]$TimeoutSec = 2
+    )
+
+    try {
+        $resp = Invoke-RestMethod -Uri $Uri -TimeoutSec $TimeoutSec -ErrorAction Stop
+        if ($resp.status -eq "UP") {
+            return $true
+        }
+    }
+    catch { }
+
+    return $false
+}
+
+function Wait-ServiceReady {
+    param(
+        [Parameter(Mandatory)][string]$Description,
+        [int]$TcpPort = 0,
+        [string[]]$ActuatorUrls = @(),
+        [string[]]$FallbackUrls = @(),
+        [int]$TimeoutSec = 120,
+        [int]$IntervalSec = 1,
+        [int]$HttpTimeoutSec = 2
+    )
+
+    if ($SkipWait) {
+        Write-Host "  SkipWait: not waiting for $Description." -ForegroundColor DarkYellow
+        Start-Sleep -Seconds 1
+        return
+    }
+
+    $deadline = (Get-Date).AddSeconds($TimeoutSec)
+    $readyUrls = @($FallbackUrls + $ActuatorUrls | Where-Object { -not [string]::IsNullOrWhiteSpace($_) } | Select-Object -Unique)
+
+    Write-Host "  Waiting for $Description..." -ForegroundColor Yellow
+
+    while ((Get-Date) -lt $deadline) {
+        if ($TcpPort -gt 0 -and -not (Test-TcpOpenFast -Port $TcpPort)) {
+            Start-Sleep -Seconds $IntervalSec
+            continue
+        }
+
+        foreach ($url in $readyUrls) {
+            if ($url -match '/actuator/health') {
+                if (Test-SpringActuatorUp -Uri $url -TimeoutSec $HttpTimeoutSec) {
+                    Write-Host "  OK: $Description is UP → $url" -ForegroundColor Green
+                    return
+                }
+            }
+            elseif (Test-HttpReachable -Uri $url -TimeoutSec $HttpTimeoutSec) {
+                Write-Host "  OK: $Description is reachable → $url" -ForegroundColor Green
+                return
+            }
+        }
+
+        Start-Sleep -Seconds $IntervalSec
+    }
+
+    throw "Timeout after ${TimeoutSec}s waiting for $Description to become ready."
+}
+
+function Start-ServiceAndWait {
+    param(
+        [Parameter(Mandatory = $true)][int] $Step,
+        [Parameter(Mandatory = $true)][int] $TotalSteps,
+        [Parameter(Mandatory = $true)][string] $DisplayName,
+        [Parameter(Mandatory = $true)][string] $RelativeModulePath,
+        [int] $TcpPort = 0,
+        [string[]] $ActuatorUrls = @(),
+        [string[]] $FallbackUrls = @(),
+        [string[]] $JavaBootstrapLines = @(),
+        [string[]] $ExtraEnvLines = @()
+    )
+
+    $started = Start-MicroserviceWindow `
+        -DisplayName $DisplayName `
+        -RelativeModulePath $RelativeModulePath `
+        -JavaBootstrapLines $JavaBootstrapLines `
+        -ExtraEnvLines $ExtraEnvLines
+
+    if (-not $started) {
+        return
+    }
+
+    Wait-ServiceReady `
+        -Description $DisplayName `
+        -TcpPort $TcpPort `
+        -ActuatorUrls $ActuatorUrls `
+        -FallbackUrls $FallbackUrls `
+        -TimeoutSec $WaitTimeoutSec
 }
 
 function Wait-TcpOpen {
@@ -103,34 +378,33 @@ function Wait-TcpOpen {
         [Parameter(Mandatory = $true)][int] $Port,
         [string] $Description,
         [int] $TimeoutSec = 120,
-        [int] $IntervalSec = 2
+        [int] $IntervalSec = 1
     )
     $deadline = (Get-Date).AddSeconds($TimeoutSec)
     Write-Host "Waiting for TCP $ComputerName`:$Port ($Description)..." -ForegroundColor Yellow
     while ((Get-Date) -lt $deadline) {
-        try {
-            $t = Test-NetConnection -ComputerName $ComputerName -Port $Port -WarningAction SilentlyContinue -ErrorAction SilentlyContinue
-            if ($t.TcpTestSucceeded) {
-                Write-Host "  OK: $Description (port $Port)" -ForegroundColor Green
-                return
-            }
+        if (Test-TcpOpenFast -ComputerName $ComputerName -Port $Port) {
+            Write-Host "  OK: $Description (port $Port)" -ForegroundColor Green
+            return
         }
-        catch { }
         Start-Sleep -Seconds $IntervalSec
     }
     throw "Timeout after ${TimeoutSec}s waiting for TCP port $Port ($Description)"
 }
 
 function Test-HttpReachable {
-    param([Parameter(Mandatory)][string]$Uri)
+    param(
+        [Parameter(Mandatory)][string]$Uri,
+        [int]$TimeoutSec = 2
+    )
 
     try {
         if ($PSVersionTable.PSVersion.Major -ge 7) {
-            $resp = Invoke-WebRequest -Uri $Uri -UseBasicParsing -TimeoutSec 6 -MaximumRedirection 2 -SkipHttpErrorCheck -ErrorAction Stop
+            $resp = Invoke-WebRequest -Uri $Uri -UseBasicParsing -TimeoutSec $TimeoutSec -MaximumRedirection 2 -SkipHttpErrorCheck -ErrorAction Stop
             return ($resp.StatusCode -ge 200 -and $resp.StatusCode -lt 500)
         }
         try {
-            $resp = Invoke-WebRequest -Uri $Uri -UseBasicParsing -TimeoutSec 6 -MaximumRedirection 2 -ErrorAction Stop
+            $resp = Invoke-WebRequest -Uri $Uri -UseBasicParsing -TimeoutSec $TimeoutSec -MaximumRedirection 2 -ErrorAction Stop
             return ($resp.StatusCode -ge 200 -and $resp.StatusCode -lt 500)
         }
         catch [System.Net.WebException] {
@@ -178,7 +452,6 @@ if ($JavaHome) {
 else {
     try {
         $versionLine = ((java -version 2>&1) | Select-Object -First 1) | Out-String
-        # Java 8 and older report as version "1.8..." — Spring Boot 4 needs 17+
         if ($versionLine -match 'version "1\.[0-8]\.') {
             Write-Host ""
             Write-Host "This project requires JDK 17+, but your default java reports Java 8 or older:" -ForegroundColor Red
@@ -196,18 +469,127 @@ else {
     }
 }
 
+$rabbitEnvLines = Get-RabbitMqEnvLines -Port $RabbitMqPort
+$mysqlPharmacieEnvLines = Get-MySqlPharmacieEnvLines -Port $MySqlPort
+$mysqlFactureEnvLines = Get-MySqlFactureEnvLines -Port $MySqlPort
+$geminiEnvLines = Get-GeminiApiKeyEnvLines -RepoRootPath $RepoRoot
+$keycloakGatewayEnvLines = Get-KeycloakGatewayEnvLines -Port $KeycloakPort
+$keycloakPatientEnvLines = Get-KeycloakPatientEnvLines -Port $KeycloakPort
+$notificationEnvLines = Get-NotificationEnvLines -Port 8089
+
+$servicePlan = @(
+    @{
+        DisplayName = "Eureka"
+        RelativeModulePath = "demoEurekaServer"
+        TcpPort = 8761
+        ActuatorUrls = @()
+        FallbackUrls = @("http://127.0.0.1:8761/")
+        ExtraEnvLines = @()
+    },
+    @{
+        DisplayName = "ConfigServer"
+        RelativeModulePath = "demoConfigServer"
+        TcpPort = 8888
+        ActuatorUrls = @("http://127.0.0.1:8888/actuator/health")
+        FallbackUrls = @("http://127.0.0.1:8888/MSPharmacie/default")
+        ExtraEnvLines = @()
+    },
+    @{
+        DisplayName = "MSPharmacie"
+        RelativeModulePath = "MSPharmacie"
+        TcpPort = 8086
+        ActuatorUrls = @("http://127.0.0.1:8086/actuator/health")
+        FallbackUrls = @("http://127.0.0.1:8086/medicaments")
+        ExtraEnvLines = ($rabbitEnvLines + $mysqlPharmacieEnvLines + $geminiEnvLines)
+    },
+    @{
+        DisplayName = "MSOrdonnance"
+        RelativeModulePath = "MSOrdonnance"
+        TcpPort = 8081
+        ActuatorUrls = @("http://127.0.0.1:8081/actuator/health")
+        FallbackUrls = @("http://127.0.0.1:8081/ordonnances")
+        ExtraEnvLines = ($rabbitEnvLines + (Get-OrdonnanceH2EnvLines))
+    },
+    @{
+        DisplayName = "MSUser"
+        RelativeModulePath = "MSUser"
+        TcpPort = 8083
+        ActuatorUrls = @("http://127.0.0.1:8083/actuator/health")
+        FallbackUrls = @("http://127.0.0.1:8083/users/hello")
+        ExtraEnvLines = $rabbitEnvLines
+    },
+    @{
+        DisplayName = "MSPatientMedcin"
+        RelativeModulePath = "MSPatientMedcin"
+        TcpPort = 8082
+        ActuatorUrls = @("http://127.0.0.1:8082/actuator/health")
+        FallbackUrls = @("http://127.0.0.1:8082/medecins/hello", "http://127.0.0.1:8082/patients")
+        ExtraEnvLines = ($rabbitEnvLines + $keycloakPatientEnvLines)
+        Skip = $SkipPatient
+    },
+    @{
+        DisplayName = "MSNotification"
+        RelativeModulePath = "MSNotification"
+        TcpPort = 8089
+        ActuatorUrls = @()
+        FallbackUrls = @("http://127.0.0.1:8089/notifications")
+        ExtraEnvLines = ($rabbitEnvLines + $notificationEnvLines)
+        Skip = $SkipNotification
+    },
+    @{
+        DisplayName = "MsFacture"
+        RelativeModulePath = "MsFacture"
+        TcpPort = 8084
+        ActuatorUrls = @("http://127.0.0.1:8084/actuator/health")
+        FallbackUrls = @("http://127.0.0.1:8084/factures")
+        ExtraEnvLines = $mysqlFactureEnvLines
+        Skip = $SkipFacture
+    },
+    @{
+        DisplayName = "MSRendezVous"
+        RelativeModulePath = "MSRendezVous"
+        TcpPort = 8088
+        ActuatorUrls = @("http://127.0.0.1:8088/actuator/health")
+        FallbackUrls = @("http://127.0.0.1:8088/rendezvous/hello")
+        ExtraEnvLines = (Get-RendezVousEnvLines)
+        Skip = $SkipRendezVous
+    },
+    @{
+        DisplayName = "ApiGateway"
+        RelativeModulePath = "demoApiGateway"
+        TcpPort = 8085
+        ActuatorUrls = @("http://127.0.0.1:8085/actuator/health")
+        FallbackUrls = @("http://127.0.0.1:8085/", "http://127.0.0.1:8085/medecins/hello")
+        ExtraEnvLines = $keycloakGatewayEnvLines
+    }
+)
+
+$activeServices = @($servicePlan | Where-Object { -not $_.Skip })
+$totalSteps = $activeServices.Count
+
 if (-not $SkipDocker) {
-    Write-Host "Starting Docker Compose (RabbitMQ + MySQL)..." -ForegroundColor Yellow
+    Write-Host ""
+    $dockerServices = @("rabbitmq", "mysql")
+    if (-not $SkipKeycloak) {
+        $dockerServices += @("keycloak-db", "keycloak")
+    }
+    Write-Host "[Docker] Starting infra ($($dockerServices -join ', '))..." -ForegroundColor Cyan
     Push-Location $RepoRoot
     try {
-        docker compose up -d
+        docker compose up -d @dockerServices
     }
     finally {
         Pop-Location
     }
     if (-not $SkipWait) {
-        Wait-TcpOpen -Port 5672 -Description "RabbitMQ" -TimeoutSec $WaitTimeoutSec
-        Wait-TcpOpen -Port 3306 -Description "MySQL" -TimeoutSec $WaitTimeoutSec
+        Wait-TcpOpen -Port $RabbitMqPort -Description "RabbitMQ AMQP" -TimeoutSec 60 -IntervalSec 1
+        Wait-TcpOpen -Port $MySqlPort -Description "MySQL" -TimeoutSec 90 -IntervalSec 1
+        if (-not $SkipKeycloak) {
+            Wait-TcpOpen -Port $KeycloakPort -Description "Keycloak" -TimeoutSec 120 -IntervalSec 2
+            Wait-HttpReady -Description "Keycloak realm" -Urls @(
+                "http://127.0.0.1:$KeycloakPort/realms/clinic-flow/.well-known/openid-configuration"
+            ) -TimeoutSec 180 -IntervalSec 3
+        }
     }
     else {
         Write-Host "SkipWait: assuming Docker ports are already accepting connections." -ForegroundColor DarkYellow
@@ -215,51 +597,84 @@ if (-not $SkipDocker) {
     }
 }
 
-Write-Host "Opening service windows (one per microservice)..." -ForegroundColor Yellow
-
-Start-MicroserviceWindow -DisplayName "Eureka" -RelativeModulePath "demoEurekaServer" -JavaBootstrapLines $javaBootstrapLines
-if (-not $SkipWait) {
-    Wait-HttpReady -Description "Eureka dashboard" -Urls @("http://127.0.0.1:8761/") -TimeoutSec $WaitTimeoutSec
+if ($WaitAll) {
+    Write-Host ""
+    Write-Host "Starting microservices sequentially (waiting for each to be ready)..." -ForegroundColor Yellow
+}
+else {
+    Write-Host ""
+    Write-Host "Fast start: wait only for Eureka, Config Server, then API Gateway." -ForegroundColor Yellow
+    Write-Host "Other services launch with a ${StaggerSec}s stagger (use -WaitAll for strict mode)." -ForegroundColor DarkGray
 }
 
-Start-MicroserviceWindow -DisplayName "ConfigServer" -RelativeModulePath "demoConfigServer" -JavaBootstrapLines $javaBootstrapLines
-if (-not $SkipWait) {
-    Wait-HttpReady -Description "Config Server (MSPharmacie config)" -Urls @("http://127.0.0.1:8888/MSPharmacie/default") -TimeoutSec $WaitTimeoutSec
-}
+$step = 0
+foreach ($svc in $activeServices) {
+    $step++
+    $mustWait = $WaitAll -or ($CriticalWaitServices -contains $svc.DisplayName)
 
-Start-MicroserviceWindow -DisplayName "MSPharmacie" -RelativeModulePath "MSPharmacie" -JavaBootstrapLines $javaBootstrapLines
-if (-not $SkipWait) {
-    Wait-HttpReady -Description "MSPharmacie REST" -Urls @(
-        "http://127.0.0.1:8086/medicaments",
-        "http://127.0.0.1:8086/actuator/health"
-    ) -TimeoutSec $WaitTimeoutSec
-}
+    Write-Host ""
+    Write-Host "[$step/$totalSteps] $($svc.DisplayName)" -ForegroundColor Cyan
 
-Start-MicroserviceWindow -DisplayName "MSOrdonnance" -RelativeModulePath "MSOrdonnance" -JavaBootstrapLines $javaBootstrapLines
-if (-not $SkipWait) {
-    Wait-HttpReady -Description "MSOrdonnance REST" -Urls @(
-        "http://127.0.0.1:8081/ordonnances",
-        "http://127.0.0.1:8081/actuator/health"
-    ) -TimeoutSec $WaitTimeoutSec
-}
-
-if (-not $SkipPatient) {
-    Start-MicroserviceWindow -DisplayName "MSPatientMedcin" -RelativeModulePath "MSPatientMedcin" -JavaBootstrapLines $javaBootstrapLines
-    if (-not $SkipWait) {
-        Wait-HttpReady -Description "MSPatientMedcin REST" -Urls @(
-            "http://127.0.0.1:8082/patients",
-            "http://127.0.0.1:8082/actuator/health"
-        ) -TimeoutSec $WaitTimeoutSec
+    if ($mustWait) {
+        Start-ServiceAndWait `
+            -Step $step `
+            -TotalSteps $totalSteps `
+            -DisplayName $svc.DisplayName `
+            -RelativeModulePath $svc.RelativeModulePath `
+            -TcpPort $svc.TcpPort `
+            -ActuatorUrls $svc.ActuatorUrls `
+            -FallbackUrls $svc.FallbackUrls `
+            -JavaBootstrapLines $javaBootstrapLines `
+            -ExtraEnvLines $svc.ExtraEnvLines
+    }
+    else {
+        $started = Start-MicroserviceWindow `
+            -DisplayName $svc.DisplayName `
+            -RelativeModulePath $svc.RelativeModulePath `
+            -JavaBootstrapLines $javaBootstrapLines `
+            -ExtraEnvLines $svc.ExtraEnvLines
+        if ($started -and -not $SkipWait -and $StaggerSec -gt 0) {
+            Start-Sleep -Seconds $StaggerSec
+        }
     }
 }
 
-Start-MicroserviceWindow -DisplayName "ApiGateway" -RelativeModulePath "demoApiGateway" -JavaBootstrapLines $javaBootstrapLines
-if (-not $SkipWait) {
-    Wait-HttpReady -Description "API Gateway (port listening)" -Urls @("http://127.0.0.1:8085/") -TimeoutSec $WaitTimeoutSec
-}
-
 Write-Host ""
-Write-Host "Done. Check Eureka: http://localhost:8761" -ForegroundColor Green
-Write-Host "Gateway: http://localhost:8085" -ForegroundColor Green
+Write-Host "Done. Services are running locally." -ForegroundColor Green
+Write-Host "  Eureka dashboard   : http://localhost:8761" -ForegroundColor Green
+Write-Host "  Keycloak admin     : http://localhost:$KeycloakPort  (admin / admin)" -ForegroundColor Green
+Write-Host "  RabbitMQ dashboard : http://localhost:15673  (guest/guest)" -ForegroundColor Green
+Write-Host "  Gateway            : http://localhost:8085  (JWT required except /welcome-message)" -ForegroundColor Green
+Write-Host ""
+Write-Host "  Frontend (separate): cd clinic-flow-frontend; npm start  -> http://localhost:4200" -ForegroundColor White
+Write-Host ""
+Write-Host "  Test via Gateway (Bearer token from Keycloak login):" -ForegroundColor White
+Write-Host "    GET http://localhost:8085/medicaments" -ForegroundColor Gray
+Write-Host "    GET http://localhost:8085/ordonnances" -ForegroundColor Gray
+Write-Host "    GET http://localhost:8085/patients" -ForegroundColor Gray
+Write-Host "    GET http://localhost:8085/users" -ForegroundColor Gray
+Write-Host "    GET http://localhost:8085/factures" -ForegroundColor Gray
+Write-Host "    GET http://localhost:8085/notifications" -ForegroundColor Gray
+Write-Host "    GET http://localhost:8085/rendezvous/hello" -ForegroundColor Gray
+Write-Host ""
 Write-Host "Close each PowerShell window (or Ctrl+C) to stop a service." -ForegroundColor Gray
-Write-Host "Docker: docker compose down  (from repo root)" -ForegroundColor Gray
+Write-Host "Docker infra: docker compose stop rabbitmq mysql keycloak keycloak-db  (from repo root)" -ForegroundColor Gray
+
+if ($StartFrontend) {
+    $frontendPath = Join-Path $RepoRoot "clinic-flow-frontend"
+    if (Test-Path (Join-Path $frontendPath "package.json")) {
+        Write-Host ""
+        Write-Host "Starting Angular frontend..." -ForegroundColor Cyan
+        $feCmd = @"
+Set-Location -LiteralPath '$frontendPath'
+`$Host.UI.RawUI.WindowTitle = 'Clinic-Flow Frontend'
+Write-Host '=== clinic-flow-frontend (ng serve) ===' -ForegroundColor Cyan
+npm start
+"@
+        Start-Process powershell.exe -ArgumentList @("-NoExit", "-Command", $feCmd) | Out-Null
+        Write-Host "  Frontend window opened -> http://localhost:4200" -ForegroundColor Green
+    }
+    else {
+        Write-Warning "clinic-flow-frontend not found - skipped -StartFrontend."
+    }
+}
