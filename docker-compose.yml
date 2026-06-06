@@ -375,7 +375,7 @@ services:
     container_name: clinicflow-msrendezvous
     hostname: msrendezvous
     ports:
-      - "8088:8081"
+      - "8089:8081"
     environment:
       EUREKA_CLIENT_SERVICE_URL_DEFAULTZONE: http://eureka:8761/eureka
       EUREKA_INSTANCE_HOSTNAME: msrendezvous
