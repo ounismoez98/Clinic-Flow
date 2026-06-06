@@ -1,0 +1,118 @@
+{
+  "info": {
+    "_postman_id": "ms-consultation-collection-v1",
+    "name": "MSConsultation Microservice",
+    "description": "Dedicated Postman collection for testing the new MSConsultation (Consultation / Medical Record) microservice running locally on port 8089.",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "variable": [
+    { "key": "consultation_url", "value": "http://localhost:8089", "type": "string" }
+  ],
+  "item": [
+    {
+      "name": "Get All Consultations",
+      "request": {
+        "method": "GET",
+        "header": [],
+        "url": {
+          "raw": "{{consultation_url}}/consultations",
+          "host": ["{{consultation_url}}"],
+          "path": ["consultations"]
+        },
+        "description": "Returns a list of all logged consultations."
+      },
+      "response": []
+    },
+    {
+      "name": "Get Consultation By ID",
+      "request": {
+        "method": "GET",
+        "header": [],
+        "url": {
+          "raw": "{{consultation_url}}/consultations/1",
+          "host": ["{{consultation_url}}"],
+          "path": ["consultations", "1"]
+        },
+        "description": "Retrieves a single consultation record by its ID. Replace '1' with the target ID."
+      },
+      "response": []
+    },
+    {
+      "name": "Create Consultation",
+      "request": {
+        "method": "POST",
+        "header": [
+          { "key": "Content-Type", "value": "application/json" }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"patientId\": 1,\n  \"medecinId\": 2,\n  \"rendezVousId\": 1,\n  \"ordonnanceId\": 1,\n  \"diagnostic\": \"Angine bactérienne avec légère fièvre.\",\n  \"notes\": \"Repos de 3 jours recommandé. Hydratation fréquente.\",\n  \"prixConsultation\": 60.00\n}",
+          "options": { "raw": { "language": "json" } }
+        },
+        "url": {
+          "raw": "{{consultation_url}}/consultations",
+          "host": ["{{consultation_url}}"],
+          "path": ["consultations"]
+        },
+        "description": "Creates a new consultation. Note that the patientId and medecinId must correspond to existing entries in MSPatientMedcin for validation to pass."
+      },
+      "response": []
+    },
+    {
+      "name": "Get Consultations By Patient ID",
+      "request": {
+        "method": "GET",
+        "header": [],
+        "url": {
+          "raw": "{{consultation_url}}/consultations/patient/1",
+          "host": ["{{consultation_url}}"],
+          "path": ["consultations", "patient", "1"]
+        },
+        "description": "Retrieves the consultation history for a specific patient ID."
+      },
+      "response": []
+    },
+    {
+      "name": "Get Consultations By Medecin ID",
+      "request": {
+        "method": "GET",
+        "header": [],
+        "url": {
+          "raw": "{{consultation_url}}/consultations/medecin/2",
+          "host": ["{{consultation_url}}"],
+          "path": ["consultations", "medecin", "2"]
+        },
+        "description": "Retrieves all consultations handled by a specific doctor ID."
+      },
+      "response": []
+    },
+    {
+      "name": "Get Consultations By RendezVous ID",
+      "request": {
+        "method": "GET",
+        "header": [],
+        "url": {
+          "raw": "{{consultation_url}}/consultations/rendezvous/1",
+          "host": ["{{consultation_url}}"],
+          "path": ["consultations", "rendezvous", "1"]
+        },
+        "description": "Retrieves any consultation records linked to a specific appointment/rendez-vous ID."
+      },
+      "response": []
+    },
+    {
+      "name": "Delete Consultation",
+      "request": {
+        "method": "DELETE",
+        "header": [],
+        "url": {
+          "raw": "{{consultation_url}}/consultations/1",
+          "host": ["{{consultation_url}}"],
+          "path": ["consultations", "1"]
+        },
+        "description": "Deletes the consultation record with the specified ID."
+      },
+      "response": []
+    }
+  ]
+}

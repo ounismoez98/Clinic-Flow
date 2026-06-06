@@ -214,7 +214,7 @@ services:
     container_name: clinicflow-msfacture
     hostname: msfacture
     ports:
-      - "8087:8087"
+      - "8087:8084"
     environment:
       <<: *spring-env
       EUREKA_INSTANCE_HOSTNAME: msfacture
@@ -230,7 +230,7 @@ services:
       config-server:
         condition: service_healthy
     healthcheck:
-      test: ["CMD", "curl", "-f", "http://localhost:8085/actuator/health"]
+      test: ["CMD", "curl", "-f", "http://localhost:8084/actuator/health"]
       interval: 15s
       timeout: 5s
       retries: 12
@@ -334,7 +334,7 @@ services:
       start_period: 90s
 
   # Async consumer: reacts to patient.event messages published by mspatientmedcin.
-  # Runs on 8088 to avoid the 8086 clash with mspharmacie. No actuator -> no healthcheck.
+  # Runs on 8090 to avoid port clashes. No actuator -> no healthcheck.
   msnotification:
     build:
       <<: *spring-build
@@ -343,10 +343,10 @@ services:
     container_name: clinicflow-msnotification
     hostname: msnotification
     ports:
-      - "8088:8088"
+      - "8090:8090"
     environment:
       <<: *spring-env
-      SERVER_PORT: "8088"
+      SERVER_PORT: "8090"
       EUREKA_INSTANCE_HOSTNAME: msnotification
     depends_on:
       rabbitmq:

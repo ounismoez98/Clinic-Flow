@@ -1,0 +1,420 @@
+<div class="p-6 space-y-6">
+
+  <!-- ── Flash success ── -->
+  <div *ngIf="successMsg"
+       class="fixed top-4 right-4 z-50 flex items-center gap-3 bg-green-600 text-white text-sm font-semibold px-5 py-3 rounded-2xl shadow-lg animate-fade-in">
+    <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24">
+      <path stroke-linecap="round" stroke-linejoin="round" d="M9 12.75 11.25 15 15 9.75M21 12a9 9 0 1 1-18 0 9 9 0 0 1 18 0z"/>
+    </svg>
+    {{ successMsg }}
+  </div>
+
+  <!-- ── Header ── -->
+  <div class="flex items-center justify-between">
+    <div>
+      <h1 class="text-2xl font-extrabold text-gray-900">Consultations</h1>
+      <p class="text-sm text-gray-500 mt-0.5">Historique des consultations et dossiers médicaux — MSConsultation · port 8089</p>
+    </div>
+    <div class="flex items-center gap-2">
+      <button (click)="loadAll()"
+              class="flex items-center gap-2 px-4 py-2.5 border border-gray-200 bg-white hover:bg-gray-50 text-gray-700 text-sm font-semibold rounded-xl shadow-sm transition-all duration-150">
+        <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" d="M16.023 9.348h4.992v-.001M2.985 19.644v-4.992m0 0h4.992m-4.993 0 3.181 3.183a8.25 8.25 0 0 0 13.803-3.7M4.031 9.865a8.25 8.25 0 0 1 13.803-3.7l3.181 3.182m0-4.991v4.99"/>
+        </svg>
+        Actualiser
+      </button>
+      <button (click)="openCreate()"
+              class="flex items-center gap-2 px-4 py-2.5 bg-blue-600 hover:bg-blue-700 text-white text-sm font-semibold rounded-xl shadow-sm shadow-blue-200 hover:shadow-md transition-all duration-150">
+        <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" d="M12 4.5v15m7.5-7.5h-15"/>
+        </svg>
+        Nouvelle Consultation
+      </button>
+    </div>
+  </div>
+
+  <!-- ── Stats ── -->
+  <div class="grid grid-cols-2 xl:grid-cols-4 gap-4">
+    <div *ngFor="let s of stats" class="bg-white rounded-2xl border border-gray-100 p-5 shadow-sm hover:shadow-md transition-shadow">
+      <div class="flex items-start justify-between mb-3">
+        <div [class]="'w-10 h-10 rounded-xl flex items-center justify-center ' + s.color">
+          <svg class="w-5 h-5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" [attr.d]="s.icon"/>
+          </svg>
+        </div>
+      </div>
+      <p class="text-2xl font-extrabold text-gray-900">{{ s.value }}</p>
+      <p class="text-xs text-gray-500 mt-0.5">{{ s.label }}</p>
+    </div>
+  </div>
+
+  <!-- ── Error banner ── -->
+  <div *ngIf="error" class="flex items-center gap-3 bg-red-50 border border-red-200 text-red-700 text-sm font-medium px-5 py-3 rounded-2xl">
+    <svg class="w-4 h-4 flex-shrink-0" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+      <path stroke-linecap="round" stroke-linejoin="round" d="M12 9v3.75m-9.303 3.376c-.866 1.5.217 3.374 1.948 3.374h14.71c1.73 0 2.813-1.874 1.948-3.374L13.949 3.378c-.866-1.5-3.032-1.5-3.898 0L2.697 16.126zM12 15.75h.007v.008H12v-.008z"/>
+    </svg>
+    {{ error }}
+  </div>
+
+  <!-- ── Toolbar ── -->
+  <div class="bg-white rounded-2xl border border-gray-100 shadow-sm overflow-hidden">
+    <div class="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 px-5 py-4 border-b border-gray-100">
+      
+      <div class="text-sm font-bold text-gray-700">Liste des Consultations</div>
+
+      <!-- Right: search + view toggle -->
+      <div class="flex items-center gap-2 w-full sm:w-auto">
+        <div class="relative flex-1 sm:w-64">
+          <span class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+            <svg class="w-4 h-4 text-gray-400" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" d="m21 21-5.197-5.197m0 0A7.5 7.5 0 1 0 5.196 5.196a7.5 7.5 0 0 0 10.607 10.607z"/>
+            </svg>
+          </span>
+          <input [(ngModel)]="search" type="text" placeholder="Chercher patient, médecin, diagnostic..."
+                 class="w-full pl-9 pr-4 py-2 text-sm border border-gray-200 rounded-xl bg-gray-50 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:bg-white transition"/>
+        </div>
+
+        <!-- View toggle -->
+        <div class="flex items-center bg-gray-100 rounded-lg p-0.5 gap-0.5">
+          <button (click)="viewMode='table'" [class]="viewMode==='table' ? 'p-1.5 bg-white rounded-md shadow-sm text-blue-600 transition' : 'p-1.5 text-gray-400 hover:text-gray-600 transition'">
+            <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" d="M8.25 6.75h12M8.25 12h12m-12 5.25h12M3.75 6.75h.007v.008H3.75V6.75zm.375 0a.375.375 0 1 1-.75 0 .375.375 0 0 1 .75 0zM3.75 12h.007v.008H3.75V12zm.375 0a.375.375 0 1 1-.75 0 .375.375 0 0 1 .75 0zm-.375 5.25h.007v.008H3.75v-.008zm.375 0a.375.375 0 1 1-.75 0 .375.375 0 0 1 .75 0z"/>
+            </svg>
+          </button>
+          <button (click)="viewMode='grid'" [class]="viewMode==='grid' ? 'p-1.5 bg-white rounded-md shadow-sm text-blue-600 transition' : 'p-1.5 text-gray-400 hover:text-gray-600 transition'">
+            <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" d="M3.75 6A2.25 2.25 0 0 1 6 3.75h2.25A2.25 2.25 0 0 1 10.5 6v2.25a2.25 2.25 0 0 1-2.25 2.25H6a2.25 2.25 0 0 1-2.25-2.25V6zM3.75 15.75A2.25 2.25 0 0 1 6 13.5h2.25a2.25 2.25 0 0 1 2.25 2.25V18a2.25 2.25 0 0 1-2.25 2.25H6A2.25 2.25 0 0 1 3.75 18v-2.25zM13.5 6a2.25 2.25 0 0 1 2.25-2.25H18A2.25 2.25 0 0 1 20.25 6v2.25A2.25 2.25 0 0 1 18 10.5h-2.25a2.25 2.25 0 0 1-2.25-2.25V6zM13.5 15.75a2.25 2.25 0 0 1 2.25-2.25H18a2.25 2.25 0 0 1 2.25 2.25V18A2.25 2.25 0 0 1 18 20.25h-2.25A2.25 2.25 0 0 1 13.5 18v-2.25z"/>
+            </svg>
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <!-- ── Loading spinner ── -->
+    <div *ngIf="loading" class="flex items-center justify-center py-20">
+      <div class="w-8 h-8 border-4 border-blue-200 border-t-blue-600 rounded-full animate-spin"></div>
+    </div>
+
+    <!-- ══ TABLE VIEW ══ -->
+    <div *ngIf="!loading && viewMode === 'table'" class="overflow-x-auto">
+      <table class="w-full text-sm">
+        <thead>
+          <tr class="bg-gray-50 border-b border-gray-100">
+            <th class="text-left text-xs font-semibold text-gray-500 uppercase tracking-wide px-5 py-3">Code</th>
+            <th class="text-left text-xs font-semibold text-gray-500 uppercase tracking-wide px-4 py-3">Date</th>
+            <th class="text-left text-xs font-semibold text-gray-500 uppercase tracking-wide px-4 py-3">Patient</th>
+            <th class="text-left text-xs font-semibold text-gray-500 uppercase tracking-wide px-4 py-3">Médecin</th>
+            <th class="text-left text-xs font-semibold text-gray-500 uppercase tracking-wide px-4 py-3">Diagnostic</th>
+            <th class="text-left text-xs font-semibold text-gray-500 uppercase tracking-wide px-4 py-3">Tarif</th>
+            <th class="px-4 py-3"></th>
+          </tr>
+        </thead>
+        <tbody class="divide-y divide-gray-50">
+          <tr *ngFor="let c of filtered"
+              class="hover:bg-blue-50/40 transition-colors cursor-pointer group">
+            
+            <!-- Code -->
+            <td class="px-5 py-3.5">
+              <div class="flex items-center gap-3">
+                <div class="w-9 h-9 rounded-xl bg-gradient-to-br from-blue-500 to-indigo-500 flex items-center justify-center text-white text-xs font-bold flex-shrink-0">
+                  <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" d="M9 5H7a2 2 0 0 0-2 2v12a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V7a2 2 0 0 0-2-2h-2M9 5a2 2 0 0 0 2 2h2a2 2 0 0 0 2-2M9 5a2 2 0 0 1 2-2h2a2 2 0 0 1 2 2"/>
+                  </svg>
+                </div>
+                <div>
+                  <p class="font-semibold text-gray-900 group-hover:text-blue-700 transition-colors">{{ consultationCode(c) }}</p>
+                  <p class="text-xs text-gray-400">RDV #{{ c.rendezVousId || '—' }}</p>
+                </div>
+              </div>
+            </td>
+            
+            <!-- Date -->
+            <td class="px-4 py-3.5 text-gray-600 text-sm whitespace-nowrap">{{ formatDate(c.dateConsultation) }}</td>
+            
+            <!-- Patient -->
+            <td class="px-4 py-3.5">
+              <span class="text-xs font-semibold text-blue-700 bg-blue-50 px-2.5 py-1 rounded-full whitespace-nowrap">{{ getPatientName(c.patientId) }}</span>
+            </td>
+            
+            <!-- Doctor -->
+            <td class="px-4 py-3.5">
+              <div class="whitespace-nowrap">
+                <p class="text-sm font-semibold text-gray-800">{{ getDoctorName(c.medecinId) }}</p>
+                <p class="text-xs text-gray-400">{{ getDoctorSpeciality(c.medecinId) }}</p>
+              </div>
+            </td>
+            
+            <!-- Diagnostic -->
+            <td class="px-4 py-3.5 max-w-xs truncate text-gray-600 font-medium">{{ c.diagnostic }}</td>
+            
+            <!-- Price -->
+            <td class="px-4 py-3.5 font-bold text-gray-900">{{ c.prixConsultation | number:'1.2-2' }} DT</td>
+            
+            <!-- Actions -->
+            <td class="px-4 py-3.5">
+              <div class="flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
+                <!-- View -->
+                <button (click)="openView(c)" title="Détails" class="p-1.5 rounded-lg hover:bg-blue-100 text-blue-600 transition">
+                  <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" d="M2.036 12.322a1.012 1.012 0 0 1 0-.639C3.423 7.51 7.36 4.5 12 4.5c4.638 0 8.573 3.007 9.963 7.178.07.207.07.431 0 .639C20.577 16.49 16.64 19.5 12 19.5c-4.638 0-8.573-3.007-9.963-7.178z"/>
+                    <path stroke-linecap="round" stroke-linejoin="round" d="M15 12a3 3 0 1 1-6 0 3 3 0 0 1 6 0z"/>
+                  </svg>
+                </button>
+                <!-- Delete -->
+                <button (click)="confirmDelete(c.id!)" title="Supprimer" class="p-1.5 rounded-lg hover:bg-red-100 text-red-500 transition">
+                  <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" d="m14.74 9-.346 9m-4.788 0L9.26 9m9.968-3.21c.342.052.682.107 1.022.166m-1.022-.165L18.16 19.673a2.25 2.25 0 0 1-2.244 2.077H8.084a2.25 2.25 0 0 1-2.244-2.077L4.772 5.79m14.456 0a48.108 48.108 0 0 0-3.478-.397m-12 .562c.34-.059.68-.114 1.022-.165m0 0a48.11 48.11 0 0 1 3.478-.397m7.5 0v-.916c0-1.18-.91-2.164-2.09-2.201a51.964 51.964 0 0 0-3.32 0c-1.18.037-2.09 1.022-2.09 2.201v.916m7.5 0a48.667 48.667 0 0 0-7.5 0"/>
+                  </svg>
+                </button>
+              </div>
+            </td>
+          </tr>
+        </tbody>
+      </table>
+
+      <div *ngIf="filtered.length === 0 && !loading" class="text-center py-16">
+        <svg class="w-12 h-12 text-gray-200 mx-auto mb-3" fill="none" stroke="currentColor" stroke-width="1.5" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" d="M9 5H7a2 2 0 0 0-2 2v12a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V7a2 2 0 0 0-2-2h-2M9 5a2 2 0 0 0 2 2h2a2 2 0 0 0 2-2M9 5a2 2 0 0 1 2-2h2a2 2 0 0 1 2 2"/>
+        </svg>
+        <p class="text-gray-400 font-medium">Aucune consultation trouvée</p>
+      </div>
+
+      <!-- Pagination info -->
+      <div class="flex items-center justify-between px-5 py-3.5 border-t border-gray-100">
+        <p class="text-xs text-gray-500">Affichage de <span class="font-semibold text-gray-700">{{ filtered.length }}</span> sur <span class="font-semibold text-gray-700">{{ consultations.length }}</span> consultations</p>
+      </div>
+    </div>
+
+    <!-- ══ GRID VIEW ══ -->
+    <div *ngIf="!loading && viewMode === 'grid'" class="p-5 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+      <div *ngFor="let c of filtered"
+           class="group bg-gray-50 hover:bg-white border border-gray-100 hover:border-blue-200 rounded-2xl p-5 cursor-pointer hover:shadow-lg transition-all duration-200">
+        
+        <!-- Top row -->
+        <div class="flex items-start justify-between mb-4">
+          <div class="flex items-center gap-3">
+            <div class="w-11 h-11 rounded-xl bg-gradient-to-br from-blue-500 to-indigo-500 flex items-center justify-center text-white flex-shrink-0 shadow-sm group-hover:scale-105 transition-transform">
+              <svg class="w-5 h-5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" d="M9 5H7a2 2 0 0 0-2 2v12a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V7a2 2 0 0 0-2-2h-2M9 5a2 2 0 0 0 2 2h2a2 2 0 0 0 2-2M9 5a2 2 0 0 1 2-2h2a2 2 0 0 1 2 2"/>
+              </svg>
+            </div>
+            <div>
+              <p class="font-bold text-gray-900 text-sm group-hover:text-blue-700 transition-colors">{{ consultationCode(c) }}</p>
+              <p class="text-xs text-gray-400">{{ getPatientName(c.patientId) }}</p>
+            </div>
+          </div>
+          <span class="text-xs font-semibold bg-gray-100 text-gray-600 px-2 py-0.5 rounded-full">{{ c.prixConsultation | number:'1.2-2' }} DT</span>
+        </div>
+
+        <!-- Diagnostic & Doctor -->
+        <div class="space-y-3 mb-4">
+          <div class="bg-white rounded-xl p-3 border border-gray-100">
+            <p class="text-[10px] text-gray-400 font-semibold uppercase tracking-wider mb-1">Diagnostic</p>
+            <p class="text-xs font-medium text-gray-700 line-clamp-2">{{ c.diagnostic }}</p>
+          </div>
+          <div class="flex justify-between items-center text-xs">
+            <span class="text-gray-500 font-medium">{{ getDoctorName(c.medecinId) }}</span>
+            <span class="text-gray-400">{{ formatDate(c.dateConsultation) }}</span>
+          </div>
+        </div>
+
+        <!-- Actions -->
+        <div class="flex gap-2">
+          <button (click)="openView(c)" class="flex-1 py-2 text-xs font-semibold text-blue-600 border border-blue-200 rounded-xl hover:bg-blue-50 transition group-hover:border-blue-400">
+            Détails
+          </button>
+          <button (click)="confirmDelete(c.id!)" class="py-2 px-3 border border-red-200 text-red-500 rounded-xl hover:bg-red-50 transition">
+            Supprimer
+          </button>
+        </div>
+      </div>
+
+      <div *ngIf="filtered.length === 0" class="col-span-3 text-center py-16">
+        <p class="text-gray-400 font-medium">Aucune consultation trouvée</p>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ══════════════════════════════════════════════════════
+     CREATE / VIEW DETAIL MODAL
+══════════════════════════════════════════════════════ -->
+<div *ngIf="showModal"
+     class="fixed inset-0 z-50 flex items-center justify-center p-4"
+     (click)="closeModal()">
+  <div class="absolute inset-0 bg-black/40 backdrop-blur-sm"></div>
+  <div class="relative bg-white rounded-2xl shadow-2xl w-full max-w-2xl max-h-[90vh] overflow-y-auto"
+       (click)="$event.stopPropagation()">
+
+    <!-- Modal header -->
+    <div [class]="'px-6 py-5 flex items-center justify-between ' +
+      (modalMode === 'view' ? 'bg-gradient-to-r from-blue-700 to-indigo-700' : 'bg-gradient-to-r from-blue-600 to-teal-500')">
+      <div class="flex items-center gap-4">
+        <div class="w-12 h-12 rounded-xl bg-white/20 backdrop-blur flex items-center justify-center text-white">
+          <svg class="w-6 h-6" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" d="M9 5H7a2 2 0 0 0-2 2v12a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V7a2 2 0 0 0-2-2h-2M9 5a2 2 0 0 0 2 2h2a2 2 0 0 0 2-2M9 5a2 2 0 0 1 2-2h2a2 2 0 0 1 2 2"/>
+          </svg>
+        </div>
+        <div>
+          <h3 class="text-white font-bold text-lg leading-tight">
+            {{ modalMode === 'create' ? 'Nouvelle Consultation' : 'Fiche Consultation' }}
+          </h3>
+          <p class="text-white/70 text-sm">
+            {{ modalMode === 'view' ? consultationCode(form) : 'MSConsultation · Enregistrement clinique' }}
+          </p>
+        </div>
+      </div>
+      <button (click)="closeModal()" class="text-white/70 hover:text-white transition p-1">
+        <svg class="w-5 h-5" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" d="M6 18 18 6M6 6l12 12"/>
+        </svg>
+      </button>
+    </div>
+
+    <!-- Modal body -->
+    <div class="px-6 py-5 space-y-5">
+
+      <!-- View mode: detail read-only -->
+      <div *ngIf="modalMode === 'view'" class="space-y-4">
+        <div class="grid grid-cols-2 gap-4">
+          <div *ngFor="let d of [
+            {label:'Code Consultation', val: consultationCode(form)},
+            {label:'Date & Heure',       val: formatDate(form.dateConsultation)},
+            {label:'Patient',            val: getPatientName(form.patientId)},
+            {label:'Médecin Traitant',   val: getDoctorName(form.medecinId) + ' (' + getDoctorSpeciality(form.medecinId) + ')'},
+            {label:'ID Rendez-vous',     val: form.rendezVousId ? ('RDV #' + form.rendezVousId) : '—'},
+            {label:'ID Ordonnance',      val: form.ordonnanceId ? ('Ordonnance #' + form.ordonnanceId) : '—'},
+            {label:'Honoraires',         val: (form.prixConsultation | number:'1.2-2') + ' DT'}
+          ]">
+            <p class="text-xs text-gray-400 font-medium mb-0.5">{{ d.label }}</p>
+            <p class="text-sm font-semibold text-gray-800">{{ d.val }}</p>
+          </div>
+        </div>
+
+        <div class="bg-gray-50 rounded-xl p-4 space-y-3">
+          <div>
+            <p class="text-xs text-gray-400 font-medium mb-1">Diagnostic</p>
+            <p class="text-sm font-medium text-gray-800 whitespace-pre-line">{{ form.diagnostic }}</p>
+          </div>
+          <div *ngIf="form.notes">
+            <p class="text-xs text-gray-400 font-medium mb-1">Notes et recommandations</p>
+            <p class="text-sm text-gray-600 whitespace-pre-line">{{ form.notes }}</p>
+          </div>
+        </div>
+      </div>
+
+      <!-- Create mode: Form -->
+      <form *ngIf="modalMode === 'create'" class="space-y-4">
+
+        <!-- Patient & Doctor selections -->
+        <div class="grid grid-cols-2 gap-4">
+          <div>
+            <label class="block text-xs font-semibold text-gray-600 mb-1.5">Patient *</label>
+            <select [(ngModel)]="form.patientId" name="patientId"
+                    class="w-full px-3 py-2.5 text-sm border border-gray-200 rounded-xl bg-gray-50 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:bg-white transition">
+              <option [value]="0" disabled>Sélectionner un patient...</option>
+              <option *ngFor="let p of patients" [value]="p.id">{{ p.prenom }} {{ p.nom }} (ID: {{ p.id }})</option>
+            </select>
+          </div>
+          <div>
+            <label class="block text-xs font-semibold text-gray-600 mb-1.5">Médecin *</label>
+            <select [(ngModel)]="form.medecinId" name="medecinId"
+                    class="w-full px-3 py-2.5 text-sm border border-gray-200 rounded-xl bg-gray-50 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:bg-white transition">
+              <option [value]="0" disabled>Sélectionner un médecin...</option>
+              <option *ngFor="let d of doctors" [value]="d.id">{{ d.prenom }} {{ d.nom }} - {{ d.specialite }} (ID: {{ d.id }})</option>
+            </select>
+          </div>
+        </div>
+
+        <!-- Optional links (Appointment & Prescription) -->
+        <div class="grid grid-cols-2 gap-4">
+          <div>
+            <label class="block text-xs font-semibold text-gray-600 mb-1.5">ID Rendez-vous (Optionnel)</label>
+            <input type="number" [(ngModel)]="form.rendezVousId" name="rendezVousId"
+                   class="w-full px-3 py-2.5 text-sm border border-gray-200 rounded-xl bg-gray-50 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:bg-white transition"
+                   placeholder="Ex: 1"/>
+          </div>
+          <div>
+            <label class="block text-xs font-semibold text-gray-600 mb-1.5">ID Ordonnance (Optionnel)</label>
+            <input type="number" [(ngModel)]="form.ordonnanceId" name="ordonnanceId"
+                   class="w-full px-3 py-2.5 text-sm border border-gray-200 rounded-xl bg-gray-50 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:bg-white transition"
+                   placeholder="Ex: 1"/>
+          </div>
+        </div>
+
+        <!-- Diagnostic (mandatory) -->
+        <div>
+          <label class="block text-xs font-semibold text-gray-600 mb-1.5">Diagnostic *</label>
+          <textarea [(ngModel)]="form.diagnostic" name="diagnostic" rows="3"
+                    class="w-full px-3 py-2.5 text-sm border border-gray-200 rounded-xl bg-gray-50 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:bg-white transition"
+                    placeholder="Saisir le diagnostic médical..."></textarea>
+        </div>
+
+        <!-- Notes (optional) -->
+        <div>
+          <label class="block text-xs font-semibold text-gray-600 mb-1.5">Notes et recommandations</label>
+          <textarea [(ngModel)]="form.notes" name="notes" rows="2"
+                    class="w-full px-3 py-2.5 text-sm border border-gray-200 rounded-xl bg-gray-50 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:bg-white transition"
+                    placeholder="Conseils de repos, hygiène de vie, etc."></textarea>
+        </div>
+
+        <!-- Fee/Tarif -->
+        <div>
+          <label class="block text-xs font-semibold text-gray-600 mb-1.5">Prix Consultation (DT) *</label>
+          <input type="number" [(ngModel)]="form.prixConsultation" name="prixConsultation" min="0" step="5"
+                 class="w-full px-3 py-2.5 text-sm border border-gray-200 rounded-xl bg-gray-50 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:bg-white transition"/>
+          <p class="text-[10px] text-gray-400 mt-1">L'enregistrement publiera un message vers le service facturation (MsFacture) pour générer automatiquement une facture.</p>
+        </div>
+
+        <!-- Error inside modal -->
+        <div *ngIf="error" class="text-xs text-red-600 font-medium bg-red-50 px-3 py-2 rounded-xl">{{ error }}</div>
+      </form>
+    </div>
+
+    <!-- Modal footer -->
+    <div class="px-6 pb-5 pt-3 flex gap-2 border-t border-gray-100">
+      <ng-container *ngIf="modalMode === 'view'">
+        <button (click)="closeModal()" class="flex-1 py-2.5 bg-blue-600 hover:bg-blue-700 text-white text-sm font-semibold rounded-xl transition">
+          Fermer
+        </button>
+      </ng-container>
+      <ng-container *ngIf="modalMode === 'create'">
+        <button (click)="save()" [disabled]="loading"
+                class="flex-1 py-2.5 bg-blue-600 hover:bg-blue-700 disabled:bg-blue-300 text-white text-sm font-semibold rounded-xl transition">
+          Enregistrer et facturer
+        </button>
+        <button (click)="closeModal()" class="flex-1 py-2.5 border border-gray-200 text-gray-700 hover:bg-gray-50 text-sm font-semibold rounded-xl transition">
+          Annuler
+        </button>
+      </ng-container>
+    </div>
+  </div>
+</div>
+
+<!-- ══ DELETE CONFIRM ══ -->
+<div *ngIf="showDeleteConfirm"
+     class="fixed inset-0 z-50 flex items-center justify-center p-4"
+     (click)="showDeleteConfirm = false">
+  <div class="absolute inset-0 bg-black/40 backdrop-blur-sm"></div>
+  <div class="relative bg-white rounded-2xl shadow-2xl w-full max-w-sm p-6" (click)="$event.stopPropagation()">
+    <div class="flex items-center gap-3 mb-4">
+      <div class="w-10 h-10 rounded-xl bg-red-100 flex items-center justify-center text-red-600 flex-shrink-0">
+        <svg class="w-5 h-5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" d="M12 9v3.75m-9.303 3.376c-.866 1.5.217 3.374 1.948 3.374h14.71c1.73 0 2.813-1.874 1.948-3.374L13.949 3.378c-.866-1.5-3.032-1.5-3.898 0L2.697 16.126zM12 15.75h.007v.008H12v-.008z"/>
+        </svg>
+      </div>
+      <div>
+        <h3 class="font-bold text-gray-900">Supprimer la consultation</h3>
+        <p class="text-sm text-gray-500">Cette action supprimera définitivement le dossier.</p>
+      </div>
+    </div>
+    <div class="flex gap-2">
+      <button (click)="doDelete()" class="flex-1 py-2.5 bg-red-600 hover:bg-red-700 text-white text-sm font-semibold rounded-xl transition">
+        Confirmer
+      </button>
+      <button (click)="showDeleteConfirm = false" class="flex-1 py-2.5 border border-gray-200 text-gray-700 hover:bg-gray-50 text-sm font-semibold rounded-xl transition">
+        Annuler
+      </button>
+    </div>
+  </div>
+</div>

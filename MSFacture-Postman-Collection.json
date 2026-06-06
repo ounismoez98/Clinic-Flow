@@ -1,0 +1,398 @@
+{
+  "info": {
+    "_postman_id": "ms-facture-collection-v1",
+    "name": "MSFacture Microservice",
+    "description": "Dedicated Postman collection for testing the MSFacture (Billing) microservice, both directly and via the API Gateway.",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "variable": [
+    { "key": "facture_url", "value": "http://localhost:8087", "type": "string" },
+    { "key": "gateway_url", "value": "http://localhost:8085", "type": "string" }
+  ],
+  "item": [
+    {
+      "name": "Direct Service Calls (Port 8087)",
+      "description": "Requests sent directly to the MSFacture microservice running on host port 8087.",
+      "item": [
+        {
+          "name": "Get All Factures",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{facture_url}}/factures",
+              "host": ["{{facture_url}}"],
+              "path": ["factures"]
+            },
+            "description": "Returns a list of all factures."
+          },
+          "response": []
+        },
+        {
+          "name": "Get Facture By ID",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{facture_url}}/factures/1",
+              "host": ["{{facture_url}}"],
+              "path": ["factures", "1"]
+            },
+            "description": "Retrieves a single facture by its ID. Replace '1' with the target ID."
+          },
+          "response": []
+        },
+        {
+          "name": "Create Facture",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"dateFacture\": \"2026-06-06\",\n  \"montantHT\": 150.00,\n  \"montantTTC\": 178.50,\n  \"statut\": \"NON_PAYEE\",\n  \"tva\": \"TVA_19\",\n  \"patientId\": 1,\n  \"lignes\": [\n    {\n      \"description\": \"Consultation Générale\",\n      \"prix\": 100.00,\n      \"quantite\": 1\n    },\n    {\n      \"description\": \"Médicaments Pharmacie\",\n      \"prix\": 50.00,\n      \"quantite\": 1\n    }\n  ]\n}",
+              "options": { "raw": { "language": "json" } }
+            },
+            "url": {
+              "raw": "{{facture_url}}/factures",
+              "host": ["{{facture_url}}"],
+              "path": ["factures"]
+            },
+            "description": "Creates a new facture. Statut options: PAYEE, NON_PAYEE, ANNULEE. TVA options: TVA_7, TVA_19."
+          },
+          "response": []
+        },
+        {
+          "name": "Mark Facture As Paid (Payer)",
+          "request": {
+            "method": "PUT",
+            "header": [],
+            "url": {
+              "raw": "{{facture_url}}/factures/1/payer",
+              "host": ["{{facture_url}}"],
+              "path": ["factures", "1", "payer"]
+            },
+            "description": "Marks the facture with the specified ID as PAID."
+          },
+          "response": []
+        },
+        {
+          "name": "Delete Facture",
+          "request": {
+            "method": "DELETE",
+            "header": [],
+            "url": {
+              "raw": "{{facture_url}}/factures/1",
+              "host": ["{{facture_url}}"],
+              "path": ["factures", "1"]
+            },
+            "description": "Deletes the facture with the specified ID."
+          },
+          "response": []
+        },
+        {
+          "name": "Get Factures By Patient",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{facture_url}}/factures/patient/1",
+              "host": ["{{facture_url}}"],
+              "path": ["factures", "patient", "1"]
+            },
+            "description": "Retrieves all factures for a specific patient ID."
+          },
+          "response": []
+        },
+        {
+          "name": "Get Factures By Statut",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{facture_url}}/factures/statut/NON_PAYEE",
+              "host": ["{{facture_url}}"],
+              "path": ["factures", "statut", "NON_PAYEE"]
+            },
+            "description": "Retrieves all factures matching a status. Status values: PAYEE, NON_PAYEE, ANNULEE."
+          },
+          "response": []
+        },
+        {
+          "name": "Search Factures By Patient And Statut",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{facture_url}}/factures/search?patientId=1&statut=NON_PAYEE",
+              "host": ["{{facture_url}}"],
+              "path": ["factures", "search"],
+              "query": [
+                { "key": "patientId", "value": "1" },
+                { "key": "statut", "value": "NON_PAYEE" }
+              ]
+            },
+            "description": "Searches for a patient's factures filtered by status."
+          },
+          "response": []
+        },
+        {
+          "name": "Search Factures By Patient Name",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{facture_url}}/factures/search-by-patient?nom=Ben Ali&prenom=Yassine",
+              "host": ["{{facture_url}}"],
+              "path": ["factures", "search-by-patient"],
+              "query": [
+                { "key": "nom", "value": "Ben Ali" },
+                { "key": "prenom", "value": "Yassine" }
+              ]
+            },
+            "description": "Retrieves factures by searching for the patient's first and last name."
+          },
+          "response": []
+        },
+        {
+          "name": "Get Facture PDF By Patient ID",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{facture_url}}/factures/1/pdf",
+              "host": ["{{facture_url}}"],
+              "path": ["factures", "1", "pdf"]
+            },
+            "description": "Generates and returns a PDF receipt for the patient ID."
+          },
+          "response": []
+        },
+        {
+          "name": "Count Factures Created Today",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{facture_url}}/factures/count-today",
+              "host": ["{{facture_url}}"],
+              "path": ["factures", "count-today"]
+            },
+            "description": "Returns the number of factures generated today."
+          },
+          "response": []
+        },
+        {
+          "name": "Count Factures By Date",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{facture_url}}/factures/count-by-date?date=2026-06-06",
+              "host": ["{{facture_url}}"],
+              "path": ["factures", "count-by-date"],
+              "query": [
+                { "key": "date", "value": "2026-06-06" }
+              ]
+            },
+            "description": "Returns the number of factures generated on a specific date (YYYY-MM-DD)."
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "Via API Gateway (Port 8085)",
+      "description": "Requests routed through the Clinic-Flow API Gateway on host port 8085.",
+      "item": [
+        {
+          "name": "[Gateway] Get All Factures",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{gateway_url}}/factures",
+              "host": ["{{gateway_url}}"],
+              "path": ["factures"]
+            },
+            "description": "Returns a list of all factures through Gateway."
+          },
+          "response": []
+        },
+        {
+          "name": "[Gateway] Get Facture By ID",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{gateway_url}}/factures/1",
+              "host": ["{{gateway_url}}"],
+              "path": ["factures", "1"]
+            },
+            "description": "Retrieves a single facture by its ID through Gateway. Replace '1' with the target ID."
+          },
+          "response": []
+        },
+        {
+          "name": "[Gateway] Create Facture",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"dateFacture\": \"2026-06-06\",\n  \"montantHT\": 150.00,\n  \"montantTTC\": 178.50,\n  \"statut\": \"NON_PAYEE\",\n  \"tva\": \"TVA_19\",\n  \"patientId\": 1,\n  \"lignes\": [\n    {\n      \"description\": \"Consultation Générale\",\n      \"prix\": 100.00,\n      \"quantite\": 1\n    },\n    {\n      \"description\": \"Médicaments Pharmacie\",\n      \"prix\": 50.00,\n      \"quantite\": 1\n    }\n  ]\n}",
+              "options": { "raw": { "language": "json" } }
+            },
+            "url": {
+              "raw": "{{gateway_url}}/factures",
+              "host": ["{{gateway_url}}"],
+              "path": ["factures"]
+            },
+            "description": "Creates a new facture through Gateway."
+          },
+          "response": []
+        },
+        {
+          "name": "[Gateway] Mark Facture As Paid (Payer)",
+          "request": {
+            "method": "PUT",
+            "header": [],
+            "url": {
+              "raw": "{{gateway_url}}/factures/1/payer",
+              "host": ["{{gateway_url}}"],
+              "path": ["factures", "1", "payer"]
+            },
+            "description": "Marks the facture with the specified ID as PAID through Gateway."
+          },
+          "response": []
+        },
+        {
+          "name": "[Gateway] Delete Facture",
+          "request": {
+            "method": "DELETE",
+            "header": [],
+            "url": {
+              "raw": "{{gateway_url}}/factures/1",
+              "host": ["{{gateway_url}}"],
+              "path": ["factures", "1"]
+            },
+            "description": "Deletes the facture through Gateway."
+          },
+          "response": []
+        },
+        {
+          "name": "[Gateway] Get Factures By Patient",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{gateway_url}}/factures/patient/1",
+              "host": ["{{gateway_url}}"],
+              "path": ["factures", "patient", "1"]
+            },
+            "description": "Retrieves all factures for a specific patient ID through Gateway."
+          },
+          "response": []
+        },
+        {
+          "name": "[Gateway] Get Factures By Statut",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{gateway_url}}/factures/statut/NON_PAYEE",
+              "host": ["{{gateway_url}}"],
+              "path": ["factures", "statut", "NON_PAYEE"]
+            },
+            "description": "Retrieves all factures matching status through Gateway."
+          },
+          "response": []
+        },
+        {
+          "name": "[Gateway] Search Factures By Patient And Statut",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{gateway_url}}/factures/search?patientId=1&statut=NON_PAYEE",
+              "host": ["{{gateway_url}}"],
+              "path": ["factures", "search"],
+              "query": [
+                { "key": "patientId", "value": "1" },
+                { "key": "statut", "value": "NON_PAYEE" }
+              ]
+            },
+            "description": "Searches for a patient's factures filtered by status through Gateway."
+          },
+          "response": []
+        },
+        {
+          "name": "[Gateway] Search Factures By Patient Name",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{gateway_url}}/factures/search-by-patient?nom=Ben Ali&prenom=Yassine",
+              "host": ["{{gateway_url}}"],
+              "path": ["factures", "search-by-patient"],
+              "query": [
+                { "key": "nom", "value": "Ben Ali" },
+                { "key": "prenom", "value": "Yassine" }
+              ]
+            },
+            "description": "Retrieves factures by searching for the patient's first and last name through Gateway."
+          },
+          "response": []
+        },
+        {
+          "name": "[Gateway] Get Facture PDF By Patient ID",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{gateway_url}}/factures/1/pdf",
+              "host": ["{{gateway_url}}"],
+              "path": ["factures", "1", "pdf"]
+            },
+            "description": "Generates and returns a PDF receipt for the patient ID through Gateway."
+          },
+          "response": []
+        },
+        {
+          "name": "[Gateway] Count Factures Created Today",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{gateway_url}}/factures/count-today",
+              "host": ["{{gateway_url}}"],
+              "path": ["factures", "count-today"]
+            },
+            "description": "Returns the number of factures generated today through Gateway."
+          },
+          "response": []
+        },
+        {
+          "name": "[Gateway] Count Factures By Date",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{gateway_url}}/factures/count-by-date?date=2026-06-06",
+              "host": ["{{gateway_url}}"],
+              "path": ["factures", "count-by-date"],
+              "query": [
+                { "key": "date", "value": "2026-06-06" }
+              ]
+            },
+            "description": "Returns the number of factures generated on a specific date (YYYY-MM-DD) through Gateway."
+          },
+          "response": []
+        }
+      ]
+    }
+  ]
+}
